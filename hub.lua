@@ -345,22 +345,22 @@ local Luna = loadstring(game:HttpGet("https://paste.ee/r/WSCKThwW", true))()
 
 
 local Window = Luna:CreateWindow({
-    Name = "The BillDev Hub (Blue Lock Rivals)",
-    Subtitle = "by Galaxy/Jah/Whohurtyoudear",
+    Name = "The MoonShine Hub (Blue Lock Rivals)",
+    Subtitle = "by qzwtrp",
     LogoID = "75237883871377",
     LoadingEnabled = true,
-    LoadingTitle = "TheBillDevHub (Blue Lock Rivals)",
-    LoadingSubtitle = "by Galaxy/Jah/Whohurtyoudear",
+    LoadingTitle = "TheMoonShineHub (Blue Lock Rivals)",
+    LoadingSubtitle = "by qzwtrp",
     ConfigSettings = {
-        RootFolder = "BillDevHub", -- Added root folder for better organization
+        RootFolder = "qzwtrp", -- Added root folder for better organization
         ConfigFolder = "Configs", -- Changed to a dedicated configs folder
         AutoLoadConfig = true -- Enable auto-loading of saved configurations
     },
 })
 
 Window:CreateHomeTab({
-    SupportedExecutors = {"Delta", "Fluxus", "Codex", "Cryptic", "Vegax", "Trigon", "Synapse X", "Script-Ware", "KRNL", "Seliware", "Solara", "Xeno", "ZORARA", "Luna", "Nihon", "JJsploit", "AWP", "Wave", "Ronix"},
-    DiscordInvite = "https://discord.gg/D3T4ArjBqk",
+    SupportedExecutors = {"Delta", "Fluxus", "Codex", "Cryptic", "Vegax", "Trigon", "Synapse X", "Script-Ware", "KRNL", "Seliware", "Solara", "Xeno", "ZORARA", "Luna", "Nihon", "JJsploit", "AWP", "Wave", "Ronix", "JJSploit"},
+    DiscordInvite = "http://dsc.gg/mshine",
     Icon = 75237883871377,
 })
 local MainTab = Window:CreateTab({
@@ -698,10 +698,12 @@ StyleTab:CreateSection("Style Selection")
 
 StyleTab:CreateDropdown({
     Name = "Select Style",
-    Description = "Choose your player style",
-    Options = {"Kunigami", "Aiku", "Karasu", "Otoya", "Bachira", "Chigiri", "Isagi", 
-              "Gagamaru", "King", "Nagi", "Rin", "Sae", "Shidou", "Reo", "Yukimiya", "Hiori"},
-    CurrentOption = {"Kunigami"},
+    Description = "Choose your player style, need Reo",
+    Options = {"Don Lorenzo", "Shidou", "Yukimiya", "Sae", "Kunigami", "Aiku", "Rin",
+              "Karasu", "Nagi", "Reo," "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
+              "Isagi", "Chigiri"
+},
+    CurrentOption = {"Yukimiya"},
     MultipleOptions = false,
     Callback = function(Option)
         player.PlayerStats.Style.Value = Option
@@ -712,13 +714,13 @@ FlowTab:CreateSection("Flow Selection")
 
 FlowTab:CreateDropdown({
     Name = "Select Flow",
-    Description = "Choose your flow ability",
+    Description = "Choose your flow ability, HAVE BUGS!",
     Options = {
-        "Dribbler", "Prodigy", "Awakened Genius",
-        "Snake", "Wildcard", "Demon Wings",
-        "Trap", "Genius", "Chameleon",
-        "King's Instinct", "Gale Burst",
-        "Monster", "Puzzle", "Lightning"
+        "Soul Harvester", "Awakened Genius", "Dribbler",
+        "Prodigy", "Snake", "Crow", "Chameleon", "Trap",
+        "Demon Wings", "Wild Card", "Gale Burst", "Genius",
+        "Monster", "King's Instinct," "Puzzle", "Ice",
+        "Lightning"
     },
     CurrentOption = {"Dribbler"},
     MultipleOptions = false,
