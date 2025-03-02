@@ -697,7 +697,7 @@ StyleTab:CreateDropdown({
     Name = "Select Style",
     Description = "Choose your player style, need Reo",
     Options = {"Don Lorenzo", "Shidou", "Yukimiya", "Sae", "Kunigami", "Aiku", "Rin",
-              "Karasu", "Nagi", "Reo," "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
+              "Karasu", "Nagi", "Reo", "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
               "Isagi", "Chigiri"
 },
     CurrentOption = {"Yukimiya"},
@@ -716,7 +716,7 @@ FlowTab:CreateDropdown({
         "Soul Harvester", "Awakened Genius", "Dribbler",
         "Prodigy", "Snake", "Crow", "Chameleon", "Trap",
         "Demon Wings", "Wild Card", "Gale Burst", "Genius",
-        "Monster", "King's Instinct," "Puzzle", "Ice",
+        "Monster", "King's Instinct", "Puzzle", "Ice",
         "Lightning"
     },
     CurrentOption = {"Dribbler"},
