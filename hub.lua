@@ -550,13 +550,15 @@ ESPTab:CreateToggle({
     end
 })
 
+local player = game.Players.LocalPlayer
+
 TeamTab:CreateSection("Team Selection")
 
 TeamTab:CreateDropdown({
     Name = "Select Team",
     Description = "Choose your team",
     Options = {"Home", "Away"},
-    CurrentOption = {"Home"},
+    CurrentOption = "Home",
     MultipleOptions = false,
     Callback = function(Option)
         selectedTeam = Option
@@ -567,7 +569,7 @@ TeamTab:CreateDropdown({
     Name = "Select Role",
     Description = "Choose your role",
     Options = {"CF", "GK", "LW", "RW", "CM"},
-    CurrentOption = {"CF"},
+    CurrentOption = "CF",
     MultipleOptions = false,
     Callback = function(Option)
         selectedRole = Option
@@ -581,15 +583,13 @@ TeamTab:CreateToggle({
     Callback = function(Value)
         autoJoinHomeEnabled = Value
         if Value then
-            task.spawn(function()
-                while autoJoinHomeEnabled do
-                    if player.Team and player.Team.Name == "Visitor" then
-                        local args = {"Home", selectedRole or "CF"}
-                        game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-                    end
-                    task.wait(20)
+            while autoJoinHomeEnabled do
+                if player.Team and player.Team.Name == "Visitor" then
+                    local args = {"Home", selectedRole or "CF"}
+                    game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
                 end
-            end)
+                task.wait(20)
+            end
         end
     end
 })
@@ -601,15 +601,13 @@ TeamTab:CreateToggle({
     Callback = function(Value)
         autoJoinAwayEnabled = Value
         if Value then
-            task.spawn(function()
-                while autoJoinAwayEnabled do
-                    if player.Team and player.Team.Name == "Visitor" then
-                        local args = {"Away", selectedRole or "CF"}
-                        game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-                    end
-                    task.wait(20)
+            while autoJoinAwayEnabled do
+                if player.Team and player.Team.Name == "Visitor" then
+                    local args = {"Away", selectedRole or "CF"}
+                    game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
                 end
-            end)
+                task.wait(20)
+            end
         end
     end
 })
@@ -631,6 +629,24 @@ CharacterTab:CreateToggle({
             game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("StaminaService"):WaitForChild("RE"):WaitForChild("DecreaseStamina"):FireServer(unpack(args))
         else
             player.PlayerStats.Stamina.Value = 100
+        end
+    end
+})
+
+CharacterTab:CreateToggle({
+    Name = "No Ability Cooldown",
+    Description = "Remove cooldown from abilities",
+    CurrentValue = false,
+    Callback = function(Value)
+        local C = require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
+        
+        if Value then
+            local o = C.AbilityCooldown
+            C.AbilityCooldown = function(s, n, ...)
+                return o(s, n, 0, ...)
+            end
+        else
+            C.AbilityCooldown = require(game:GetService("ReplicatedStorage").Controllers.AbilityController).AbilityCooldown
         end
     end
 })
