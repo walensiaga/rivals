@@ -193,14 +193,37 @@ local function autoTPBall()
     end
 end
 
+local function isBallMovingTowardsGK(ball)
+    local ballVelocity = ball.AssemblyLinearVelocity
+    local ballToGK = (rootPart.Position - ball.Position).Unit
+    local dotProduct = ballVelocity.Unit:Dot(ballToGK)
+    
+    -- Якщо dotProduct > 0, м'яч рухається в бік голкіпера
+    -- Якщо dotProduct <= 0, м'яч рухається від голкіпера
+    return dotProduct > 0
+end
+
 local function autoGoalKeeper()
-    local ball
     while autoGoalKeeperEnabled do
-        ball = workspace:FindFirstChild("Football")
-        if ball and ball.AssemblyLinearVelocity.Magnitude > 5 then
-            rootPart:PivotTo(CFrame.new(
-                ball.Position + (ball.AssemblyLinearVelocity * 0.1)
-            ))
+        local ball = workspace:FindFirstChild("Football")
+        if ball and ball:IsA("BasePart") then
+            -- Перевірка, чи м'яч рухається в бік голкіпера
+            if isBallMovingTowardsGK(ball) then
+                -- Відстань до м'яча
+                local distance = (ball.Position - rootPart.Position).Magnitude
+
+                -- Наведення на м'яч з урахуванням прогнозування
+                local ballPosition = ball.Position + (ball.Velocity * predictionDistance)
+                local direction = (ballPosition - rootPart.Position).Unit
+                rootPart.CFrame = CFrame.new(rootPart.Position, rootPart.Position + direction * Vector3.new(1, 0, 1))
+
+                -- Натискання "Q", якщо м'яч в межах 3 метрів
+                if distance <= MAX_DISTANCE then
+                    UserInputService:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
+                    task.wait(0.1)
+                    UserInputService:SendKeyEvent(false, Enum.KeyCode.Q, false, nil)
+                end
+            end
         end
         task.wait()
     end
@@ -491,10 +514,10 @@ MainTab:CreateToggle({
 MainTab:CreateSlider({
     Name = "Goal Keeper Prediction Distance",
     Description = "Adjust the goal keeper prediction distance",
-    Range = {0, 100},
-    Increment = 1,
+    Range = {0, 10},
+    Increment = 0.1,
     Suffix = "Studs",
-    CurrentValue = 50,
+    CurrentValue = 1,
     Callback = function(Value)
         predictionDistance = Value
     end,
@@ -638,12 +661,24 @@ CharacterTab:CreateToggle({
     Description = "Remove cooldown from abilities",
     CurrentValue = false,
     Callback = function(Value)
-        local C = require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
-        
+        local success, C = pcall(function()
+            return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
+        end)
+
+        if not success then
+            warn("AbilityController not found!")
+            return
+        end
+
+        if not C or not C.AbilityCooldown or type(C.AbilityCooldown) ~= "function" then
+            warn("AbilityCooldown is not a valid function!")
+            return
+        end
+
         if not C.OriginalAbilityCooldown then
             C.OriginalAbilityCooldown = C.AbilityCooldown
         end
-        
+
         if Value then
             C.AbilityCooldown = function(self, abilityName, ...)
                 return C.OriginalAbilityCooldown(self, abilityName, 0, ...)
@@ -651,15 +686,6 @@ CharacterTab:CreateToggle({
         else
             C.AbilityCooldown = C.OriginalAbilityCooldown
         end
-    end
-})
-
-CharacterTab:CreateToggle({
-    Name = "Noclip",
-    Description = "Walk through walls",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().noclip = Value
     end
 })
 
