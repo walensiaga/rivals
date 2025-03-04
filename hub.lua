@@ -640,13 +640,16 @@ CharacterTab:CreateToggle({
     Callback = function(Value)
         local C = require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
         
+        if not C.OriginalAbilityCooldown then
+            C.OriginalAbilityCooldown = C.AbilityCooldown
+        end
+        
         if Value then
-            local o = C.AbilityCooldown
-            C.AbilityCooldown = function(s, n, ...)
-                return o(s, n, 0, ...)
+            C.AbilityCooldown = function(self, abilityName, ...)
+                return C.OriginalAbilityCooldown(self, abilityName, 0, ...)
             end
         else
-            C.AbilityCooldown = require(game:GetService("ReplicatedStorage").Controllers.AbilityController).AbilityCooldown
+            C.AbilityCooldown = C.OriginalAbilityCooldown
         end
     end
 })
