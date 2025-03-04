@@ -212,10 +212,8 @@ local function autoGoalKeeper()
                 -- Відстань до м'яча
                 local distance = (ball.Position - rootPart.Position).Magnitude
 
-                -- Наведення на м'яч з урахуванням прогнозування
-                local ballPosition = ball.Position + (ball.Velocity * predictionDistance)
-                local direction = (ballPosition - rootPart.Position).Unit
-                rootPart.CFrame = CFrame.new(rootPart.Position, rootPart.Position + direction * Vector3.new(1, 0, 1))
+                -- Наведення на м'яч
+                aimAtBall(ball)
 
                 -- Натискання "Q", якщо м'яч в межах 3 метрів
                 if distance <= MAX_DISTANCE then
@@ -350,6 +348,26 @@ local function aimlock()
         end
         task.wait()
     end
+end
+
+local function aimAtBall(ball)
+    if not ball or not rootPart then return end
+
+    -- Перевірка, чи м'яч має швидкість
+    if ball.Velocity.Magnitude == 0 then
+        return
+    end
+
+    -- Отримуємо позицію м'яча з урахуванням прогнозування
+    local ballPosition = ball.Position + (ball.Velocity * predictionDistance)
+
+    -- Наводимо голкіпера на м'яч
+    local direction = (ballPosition - rootPart.Position).Unit
+    local newCFrame = CFrame.new(rootPart.Position, rootPart.Position + direction * Vector3.new(1, 0, 1))
+
+    -- Обмежуємо обертання голкіпера (наприклад, лише по осі Y)
+    local _, y, _ = newCFrame:ToOrientation()
+    rootPart.CFrame = CFrame.new(rootPart.Position) * CFrame.Angles(0, y, 0)
 end
 
 RunService.RenderStepped:Connect(FootballESP)
