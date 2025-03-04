@@ -202,7 +202,6 @@ local function isBallMovingTowardsGK(ball)
     -- Якщо dotProduct <= 0, м'яч рухається від голкіпера
     return dotProduct > 0
 end
-
 local function autoGoalKeeper()
     while autoGoalKeeperEnabled do
         local ball = workspace:FindFirstChild("Football")
