@@ -1,8 +1,8 @@
-local v0 = game:GetService("Players");
-local v1 = game:GetService("ReplicatedStorage");
-local v2 = v0.LocalPlayer;
-local LocalPlayer = Players.LocalPlayer;
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait();
+local v0 = game:GetService("Players")
+local v1 = game:GetService("ReplicatedStorage")
+local v2 = v0.LocalPlayer
+local LocalPlayer = v0.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local v3 = game:GetService("TweenService");
 local UserInputService = game:GetService("UserInputService");
 local v4 = v1:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("BallService"):WaitForChild("RE"):WaitForChild("Shoot");
@@ -30,7 +30,7 @@ local v24 = {"CF","GK","LW","RW","CM"};
 local v25 = {"Home","Away"};
 local v26 = "Home";
 local v27 = "CF";
-local Ball = workspace:FindFirstChild("Football")
+local Ball = workspace:WaitForChild("Football", 10)
 if not Ball then
     warn("No Ball Found!")
     return
