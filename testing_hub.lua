@@ -9,6 +9,7 @@ local v4 = v1:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Servic
 local v5 = v1:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("BallService"):WaitForChild("RE"):WaitForChild("Slide");
 local v6 = v2.Character or v2.CharacterAdded:Wait();
 local v7 = v6:WaitForChild("HumanoidRootPart");
+local RootPart = v7
 local v8 = v6:WaitForChild("Humanoid");
 local v9 = game:GetService("RunService");
 local v10 = game:GetService("Workspace");
@@ -39,16 +40,20 @@ local controlling = false
 local ascending = false
 local speed = 70
 local angle = 0
-local radius = 6 -- Увеличен радиус движения
+local radius = 6
 local dragging = false
 
 local gui = Instance.new("ScreenGui")
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-gui.Enabled = false -- GUI изначально скрыт
+gui.Enabled = false
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+gui.Enabled = false
 
 local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0.2, 0, 0.3, 0)
-frame.Position = UDim2.new(0, 10, 0.35, 0) -- Слева посредине
+frame.Position = UDim2.new(0, 10, 0.35, 0)
 frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 frame.Parent = gui
 
@@ -64,8 +69,8 @@ ascendButton.MouseButton1Click:Connect(function()
         Ball.Anchored = true
     else
         Ball.Anchored = false
-        Ball.Position = RootPart.Position -- Телепортируем к игроку
-        Ball.Velocity = Vector3.new(0, 0, 0) -- Сбрасываем скорость
+        Ball.Position = RootPart.Position
+        Ball.Velocity = Vector3.new(0, 0, 0)
     end
 end)
 
@@ -831,9 +836,14 @@ RunService.Heartbeat:Connect(function()
         if UserInputService:IsKeyDown(Enum.KeyCode.D) then
             moveDirection = moveDirection + Camera.CFrame.RightVector
         end
-        Ball.Velocity = moveDirection.unit * speed
+        if moveDirection.Magnitude > 0 then
+            Ball.Velocity = moveDirection.Unit * speed
+        else
+          Ball.Velocity = Vector3.new(0,0,0)
+        end
     end
 end)
+
 v58:CreateToggle({Name="No Ability Cooldown",Description="Remove cooldown from abilities",CurrentValue=false,Callback=function(v137)
 	local v138 = 0 - 0;
 	local v139;
