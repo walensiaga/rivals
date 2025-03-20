@@ -30,12 +30,66 @@ local v24 = {"CF","GK","LW","RW","CM"};
 local v25 = {"Home","Away"};
 local v26 = "Home";
 local v27 = "CF";
+local Ball = workspace:FindFirstChild("Football")
+if not Ball then
+    warn("No Ball Found!")
+    return
+end
 local controlling = false
 local ascending = false
 local speed = 70
 local angle = 0
 local radius = 6 -- Увеличен радиус движения
 local dragging = false
+
+local gui = Instance.new("ScreenGui")
+gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+gui.Enabled = false -- GUI изначально скрыт
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0.2, 0, 0.3, 0)
+frame.Position = UDim2.new(0, 10, 0.35, 0) -- Слева посредине
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.Parent = gui
+
+local ascendButton = Instance.new("TextButton")
+ascendButton.Size = UDim2.new(1, 0, 0.3, 0)
+ascendButton.Position = UDim2.new(0, 0, 0, 0)
+ascendButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+ascendButton.Text = "Ascend Ball"
+ascendButton.Parent = frame
+ascendButton.MouseButton1Click:Connect(function()
+    ascending = not ascending
+    if ascending then
+        Ball.Anchored = true
+    else
+        Ball.Anchored = false
+        Ball.Position = RootPart.Position -- Телепортируем к игроку
+        Ball.Velocity = Vector3.new(0, 0, 0) -- Сбрасываем скорость
+    end
+end)
+
+local controlButton = Instance.new("TextButton")
+controlButton.Size = UDim2.new(1, 0, 0.3, 0)
+controlButton.Position = UDim2.new(0, 0, 0.35, 0)
+controlButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+controlButton.Text = "Ball Control"
+controlButton.Parent = frame
+controlButton.MouseButton1Click:Connect(function()
+    controlling = not controlling
+end)
+
+local speedSlider = Instance.new("TextButton")
+speedSlider.Size = UDim2.new(1, 0, 0.3, 0)
+speedSlider.Position = UDim2.new(0, 0, 0.7, 0)
+speedSlider.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
+speedSlider.Text = "Speed: " .. speed
+speedSlider.Parent = frame
+speedSlider.MouseButton1Click:Connect(function()
+    speed = speed + 10
+    if speed > 200 then speed = 10 end
+    speedSlider.Text = "Speed: " .. speed
+end)
 
 local function v28()
 	local v69 = 0;
@@ -746,141 +800,40 @@ v58:CreateToggle({Name="Infinite Stamina",Description="Never run out of stamina"
 		v2.PlayerStats.Stamina.Value = 100;
 	end
 end});
-
 v58:CreateToggle({
-    Name = "Ball Controler",
-    Description = "Football Control GUI",
+    Name = "Ball Control",Description = "Show or Hide the Ball Control GUI",
     CurrentValue = false,
-    Callback = function(value)
-        if value then
-	    local gui = Instance.new("ScreenGui")
-            gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-	    local ascendButton = Instance.new("TextButton")
-            ascendButton.Size = UDim2.new(0.15, 0, 0.08, 0)
-            ascendButton.Position = UDim2.new(0.1, 0, 0.8, 0)
-            ascendButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            ascendButton.Text = "ASCEND"
-            ascendButton.Parent = gui
-
-	    local controlButton = Instance.new("TextButton")
-            controlButton.Size = UDim2.new(0.15, 0, 0.08, 0)
-            controlButton.Position = UDim2.new(0.1, 0, 0.7, 0)
-            controlButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
-            controlButton.Text = "CONTROL"
-            controlButton.Parent = gui
-
-	    local controlFrame = Instance.new("Frame")
-            controlFrame.Size = UDim2.new(0.2, 0, 0.05, 0)
-            controlFrame.Position = UDim2.new(0.4, 0, 0.6, 0)
-            controlFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            controlFrame.Visible = false
-            controlFrame.Parent = gui
-
-	    local speedLabel = Instance.new("TextLabel")
-            speedLabel.Size = UDim2.new(1, 0, 0.4, 0)
-            speedLabel.BackgroundTransparency = 1
-            speedLabel.Text = "Speed: 70"
-            speedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            speedLabel.TextScaled = true
-            speedLabel.Parent = controlFrame
-
-	    local speedSlider = Instance.new("Frame")
-            speedSlider.Size = UDim2.new(0.9, 0, 0.4, 0)
-            speedSlider.Position = UDim2.new(0.05, 0, 0.5, 0)
-            speedSlider.BackgroundColor3 = Color3.fromRGB(100, 255, 100)
-            speedSlider.Parent = controlFrame
-
-            local sliderBar = Instance.new("Frame")
-            sliderBar.Size = UDim2.new(0.1, 0, 1, 0)
-            sliderBar.Position = UDim2.new(0.5, -5, 0, 0)
-            sliderBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            sliderBar.Parent = speedSlider
-
-	    local function updateSpeed()
-                local posX = (sliderBar.Position.X.Scale - 0.025) * 250
-                speed = math.floor(50 + posX)
-                speedLabel.Text = "Speed: " .. tostring(speed)
-            end
-
-            -- Управление слайдером скорости
-            dragging = false
-            sliderBar.InputBegan:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = true
-                end
-            end)
-
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                    dragging = false
-                end
-            end)
-
-            RunService.RenderStepped:Connect(function()
-                if dragging then
-                    local mouseX = UserInputService:GetMouseLocation().X
-                    local minX = speedSlider.AbsolutePosition.X
-                    local maxX = minX + speedSlider.AbsoluteSize.X
-                    local newPosition = (mouseX - minX) / (maxX - minX)
-                    sliderBar.Position = UDim2.new(math.clamp(newPosition, 0, 1) - 0.025, 0, 0, 0)
-                    updateSpeed()
-                end
-            end)
-
-            controlButton.MouseButton1Click:Connect(function()
-                controlling = not controlling
-                controlFrame.Visible = controlling
-                if controlling then
-                    Camera.CameraSubject = Ball
-                else
-                    Camera.CameraSubject = Character
-                end
-            end)
-
-            ascendButton.MouseButton1Click:Connect(function()
-                ascending = not ascending
-                if ascending then
-                    Ball.Anchored = true
-                else
-                    Ball.Anchored = false
-                    Ball.Position = RootPart.Position
-                    Ball.Velocity = Vector3.new(0, 0, 0)
-                end
-            end)
-
-            RunService.Heartbeat:Connect(function()
-                if ascending then
-                    angle = angle + 0.05
-                    Ball.Position = RootPart.Position + Vector3.new(math.cos(angle) * radius, 3, math.sin(angle) * radius)
-                end
-            end)
-
-            RunService.Heartbeat:Connect(function()
-                if controlling then
-                    local moveDirection = Vector3.new(0, 0, 0)
-                    if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                        moveDirection = moveDirection + Camera.CFrame.LookVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                        moveDirection = moveDirection - Camera.CFrame.LookVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                        moveDirection = moveDirection - Camera.CFrame.RightVector
-                    end
-                    if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                        moveDirection = moveDirection + Camera.CFrame.RightVector
-                    end
-                    Ball.Velocity = moveDirection.unit * speed
-                end
-            end)
-        else
-            -- Удаляем GUI, если выключен Toggle
-            if gui then
-                gui:Destroy()
-            end
-        end
+    Callback = function(state)
+        guiEnabled = state
+        gui.Enabled = state
     end
 })
+
+RunService.Heartbeat:Connect(function()
+    if ascending then
+        angle = angle + 0.05
+        Ball.Position = RootPart.Position + Vector3.new(math.cos(angle) * radius, 3, math.sin(angle) * radius)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if controlling then
+        local moveDirection = Vector3.new(0, 0, 0)
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+            moveDirection = moveDirection + Camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+            moveDirection = moveDirection - Camera.CFrame.LookVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+            moveDirection = moveDirection - Camera.CFrame.RightVector
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+            moveDirection = moveDirection + Camera.CFrame.RightVector
+        end
+        Ball.Velocity = moveDirection.unit * speed
+    end
+end)
 v58:CreateToggle({Name="No Ability Cooldown",Description="Remove cooldown from abilities",CurrentValue=false,Callback=function(v137)
 	local v138 = 0 - 0;
 	local v139;
