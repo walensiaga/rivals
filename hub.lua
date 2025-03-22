@@ -375,7 +375,7 @@ local distanceText = nil
 local highlight = nil
 
 local success, result = pcall(function()
-    return game:HttpGet('https://raw.githubusercontent.com/StepBroFurious/Script/main/HydraHubUi.lua')
+    return game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua')
 end)
 
 if not success then
