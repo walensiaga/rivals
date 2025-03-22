@@ -374,7 +374,27 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
-local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua'))()
+local success, result = pcall(function()
+    return game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua')
+end)
+
+if not success then
+    warn("Failed to load ReduxHubUI: " .. result)
+    return
+end
+
+local libFunc, errorMsg = loadstring(result)
+if not libFunc then
+    warn("Failed to compile ReduxHubUI: " .. errorMsg)
+    return
+end
+
+local UILib = libFunc()
+if not UILib then
+    warn("UILib is nil! The loaded script did not return a library.")
+    return
+end
+
 local Window = UILib.new("Redux", game.Players.LocalPlayer.UserId, "by qzwtrp")
 
 -- Категорія Main
