@@ -374,7 +374,20 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
-local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua'))
+local success, result = pcall(function()
+    return game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua')
+end)
+
+if not success then
+    warn("HttpGet failed: " .. result)
+    return
+end
+
+local UILib = loadstring(result)
+if not UILib then
+    warn("Failed to compile ReduxHubUI library")
+    return
+end
 if not UILib then
     error("Failed to load ReduxHubUI library")
 end
