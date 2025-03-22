@@ -374,10 +374,14 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
-local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))
-if not ui then
-    warn("Failed to load Dollarware UI Library from URL")
-    return
+local success, result = pcall(function()
+    return game:HttpGet('https://www.google.com')
+end)
+
+if success then
+    print("HttpGet succeeded, result length: " .. #result)
+else
+    print("HttpGet failed: " .. result)
 end
 
 local UI = ui({
