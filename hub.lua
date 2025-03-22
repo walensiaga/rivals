@@ -374,23 +374,17 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
-local success, result = pcall(function()
-    return game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua')
-end)
-
-if not success then
-    warn("HttpGet failed: " .. result)
+local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))
+if not ui then
+    warn("Failed to load Dollarware UI Library from URL")
     return
 end
 
-local UILib = loadstring(result)
-if not UILib then
-    warn("Failed to compile ReduxHubUI library")
-    return
-end
-if not UILib then
-    error("Failed to load ReduxHubUI library")
-end
+local UI = ui({
+    rounding = true,      -- Без закруглень
+    theme = 'lime',      -- Тема (можна змінити на orange, lime тощо)
+    smoothDragging = true -- Без плавного перетягування
+})
 
 -- Створюємо екземпляр UI через метод new
 local Window = UILib.new("Redux", game.Players.LocalPlayer.UserId, "by qzwtrp")
