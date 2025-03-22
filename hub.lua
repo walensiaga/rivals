@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local TweenService = game:GetService("TweenService")
 local ballServiceRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("BallService"):WaitForChild("RE"):WaitForChild("Shoot")
@@ -22,6 +23,14 @@ local autoTPBallEnabled = false
 local autoJoinRandomTeamEnabled = false
 local autoJoinHomeEnabled = false
 local autoJoinAwayEnabled = false
+local autoGoalKeeperEnabled = false
+local autoBringEnabled = false
+local aimlockEnabled = false
+local predictionDistance = 1
+local MAX_DISTANCE = 3
+local tracer = nil
+local distanceText = nil
+local highlight = nil
 local roles = {"CF", "GK", "LW", "RW", "CM"}
 local teams = {"Home", "Away"}
 local selectedTeam = "Home"
@@ -198,23 +207,16 @@ local function isBallMovingTowardsGK(ball)
     local ballToGK = (rootPart.Position - ball.Position).Unit
     local dotProduct = ballVelocity.Unit:Dot(ballToGK)
     
-    -- Якщо dotProduct > 0, м'яч рухається в бік голкіпера
-    -- Якщо dotProduct <= 0, м'яч рухається від голкіпера
     return dotProduct > 0
 end
+
 local function autoGoalKeeper()
     while autoGoalKeeperEnabled do
         local ball = workspace:FindFirstChild("Football")
         if ball and ball:IsA("BasePart") then
-            -- Перевірка, чи м'яч рухається в бік голкіпера
             if isBallMovingTowardsGK(ball) then
-                -- Відстань до м'яча
                 local distance = (ball.Position - rootPart.Position).Magnitude
-
-                -- Наведення на м'яч
                 aimAtBall(ball)
-
-                -- Натискання "Q", якщо м'яч в межах 3 метрів
                 if distance <= MAX_DISTANCE then
                     UserInputService:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
                     task.wait(0.1)
@@ -238,7 +240,7 @@ local function autoBring()
 end
 
 local function fly()
-    local flying = true
+    local flying = false
     local flySpeed = 100
     local maxFlySpeed = 1000
     local speedIncrement = 0.4
@@ -254,7 +256,8 @@ local function fly()
         return value + (value * (math.random(-range, range) / 100))
     end
 
-    if flying then
+    if not flying then
+        flying = true
         workspace.Gravity = 0
         task.spawn(function()
             while flying do
@@ -277,7 +280,6 @@ local function fly()
                 end
 
                 RunService.RenderStepped:Wait()
-                if not flying then break end
             end
         end)
     else
@@ -352,19 +354,13 @@ end
 local function aimAtBall(ball)
     if not ball or not rootPart then return end
 
-    -- Перевірка, чи м'яч має швидкість
     if ball.Velocity.Magnitude == 0 then
         return
     end
 
-    -- Отримуємо позицію м'яча з урахуванням прогнозування
     local ballPosition = ball.Position + (ball.Velocity * predictionDistance)
-
-    -- Наводимо голкіпера на м'яч
     local direction = (ballPosition - rootPart.Position).Unit
     local newCFrame = CFrame.new(rootPart.Position, rootPart.Position + direction * Vector3.new(1, 0, 1))
-
-    -- Обмежуємо обертання голкіпера (наприклад, лише по осі Y)
     local _, y, _ = newCFrame:ToOrientation()
     rootPart.CFrame = CFrame.new(rootPart.Position) * CFrame.Angles(0, y, 0)
 end
@@ -378,442 +374,345 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
-local Luna = loadstring(game:HttpGet("https://paste.ee/r/WSCKThwW", true))()
+local UILib = loadstring(game:HttpGet('https://raw.githubusercontent.com/walensiaga/rivals/refs/heads/main/ReduxHubUI.lua'))()
+local Window = UILib.new("Redux", game.Players.LocalPlayer.UserId, "by qzwtrp")
 
+-- Категорія Main
+local MainCategory = Window:Category("Main", "http://www.roblox.com/asset/?id=4483345998")
+local MainButton = MainCategory:Button("Main", "http://www.roblox.com/asset/?id=4483345998")
+local MainSection = MainButton:Section("Autofarm Features", "Left")
 
-local Window = Luna:CreateWindow({
-    Name = "MoonShine (Blue Lock Rivals)",
-    Subtitle = "by qzwtrp",
-    LogoID = "87459248805004",
-    LoadingEnabled = true,
-    LoadingTitle = "TheMoonShineHub",
-    LoadingSubtitle = "by qzwtrp",
-    ConfigSettings = {
-        RootFolder = "qzwtrp", -- Added root folder for better organization
-        ConfigFolder = "Configs", -- Changed to a dedicated configs folder
-        AutoLoadConfig = true -- Enable auto-loading of saved configurations
-    },
-})
-
-Window:CreateHomeTab({
-    SupportedExecutors = {"Delta", "Fluxus", "Codex", "Cryptic", "Vegax", "Trigon", "Synapse X", "Script-Ware", "KRNL", "Seliware", "Solara", "Xeno", "ZORARA", "Luna", "Nihon", "JJsploit", "AWP", "Wave", "Ronix", "JJSploit"},
-    DiscordInvite = "http://dsc.gg/mshine",
-    Icon = 87459248805004,
-})
-local MainTab = Window:CreateTab({
-    Name = "Main",
-    Icon = "home_filled",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local CharacterTab = Window:CreateTab({
-    Name = "Local Player",
-    Icon = "account_circle",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local ESPTab = Window:CreateTab({
-    Name = "ESP",
-    Icon = "visibility",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local TeamTab = Window:CreateTab({
-    Name = "Team",
-    Icon = "group_work",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local StyleTab = Window:CreateTab({
-    Name = "Styles",
-    Icon = "brush",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local FlowTab = Window:CreateTab({
-    Name = "Flow",
-    Icon = "waves",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local CosmeticTab = Window:CreateTab({
-    Name = "Cosmetics",
-    Icon = "stars",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-local UITab = Window:CreateTab({
-    Name = "UI Settings",
-    Icon = "settings_applications",
-    ImageSource = "Material",
-    ShowTitle = true
-})
-
-MainTab:CreateSection("Autofarm Features")
-
-MainTab:CreateToggle({
-    Name = "Autofarm All",
+MainSection:Toggle({
+    Title = "Autofarm All",
     Description = "Enable all autofarm features",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoGoalEnabled = Value
-        autoStealEnabled = Value
-        autoTPBallEnabled = Value
-        autoBringEnabled = Value
-        autoGoalKeeperEnabled = Value
-        
-        if Value then
-            task.spawn(autoGoal)
-            task.spawn(autoSteal)
-            task.spawn(autoTPBall)
-            task.spawn(autoBring)
-            task.spawn(autoGoalKeeper)
-        end
+    Default = false
+}, function(Value)
+    autoGoalEnabled = Value
+    autoStealEnabled = Value
+    autoTPBallEnabled = Value
+    autoBringEnabled = Value
+    autoGoalKeeperEnabled = Value
+    
+    if Value then
+        task.spawn(autoGoal)
+        task.spawn(autoSteal)
+        task.spawn(autoTPBall)
+        task.spawn(autoBring)
+        task.spawn(autoGoalKeeper)
     end
 })
-MainTab :CreateToggle({
-    Name = "Auto Steal",
+
+MainSection:Toggle({
+    Title = "Auto Steal",
     Description = "Enable auto steal",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoStealEnabled = Value
-        if Value then
-            task.spawn(autoSteal)
-        else
-            task.cancel(autoSteal)
-        end
+    Default = false
+}, function(Value)
+    autoStealEnabled = Value
+    if Value then
+        task.spawn(autoSteal)
     end
 })
 
-MainTab:CreateToggle({
-    Name = "Auto Goal",
+MainSection:Toggle({
+    Title = "Auto Goal",
     Description = "Automatically score goals when you have the ball",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoGoalEnabled = Value
-        if Value then
-            task.spawn(autoGoal)
-        end
+    Default = false
+}, function(Value)
+    autoGoalEnabled = Value
+    if Value then
+        task.spawn(autoGoal)
     end
 })
 
-MainTab:CreateToggle({
-    Name = "Auto TP Ball",
+MainSection:Toggle({
+    Title = "Auto TP Ball",
     Description = "Automatically teleport to the ball",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoTPBallEnabled = Value
-        if Value then
-            task.spawn(autoTPBall)
-        end
+    Default = false
+}, function(Value)
+    autoTPBallEnabled = Value
+    if Value then
+        task.spawn(autoTPBall)
     end
 })
 
-MainTab:CreateToggle({
-    Name = "Auto Goal Keeper",
+MainSection:Toggle({
+    Title = "Auto Goal Keeper",
     Description = "Automatically move to block incoming balls",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoGoalKeeperEnabled = Value
-        if Value then
-            task.spawn(autoGoalKeeper)
-        end
+    Default = false
+}, function(Value)
+    autoGoalKeeperEnabled = Value
+    if Value then
+        task.spawn(autoGoalKeeper)
     end
 })
 
-MainTab:CreateSlider({
-    Name = "Goal Keeper Prediction Distance",
+MainSection:Slider({
+    Title = "Goal Keeper Prediction Distance",
     Description = "Adjust the goal keeper prediction distance",
-    Range = {0, 10},
-    Increment = 0.1,
-    Suffix = "Studs",
-    CurrentValue = 1,
-    Callback = function(Value)
-        predictionDistance = Value
-    end,
-})
+    Default = 1,
+    Min = 0,
+    Max = 10
+}, function(Value)
+    predictionDistance = Value
+end)
 
-MainTab:CreateButton({
-    Name = "Bring Football",
+MainSection:Button({
+    Title = "Bring Football",
+    ButtonName = "Bring",
     Description = "Bring the football to you",
-    Callback = function()
-        local ball = workspace:FindFirstChild("Football")
-        if ball then
-            local args = {[1] = ball}
-            game:GetService("ReplicatedStorage").Packages.Knit.Services.BallService.RE.Grab:FireServer(unpack(args))
-        end
-    end
-})
-
-ESPTab:CreateSection("ESP Options")
-
-ESPTab:CreateToggle({
-    Name = "Football ESP",
-    Description = "Show football ESP overlay",
-    CurrentValue = false,
-    Callback = function(Value)
-        FootballESPEnabled = Value
-        if not Value then
-            ClearESP()
-        end
-    end
-})
-
-ESPTab:CreateToggle({
-    Name = "Player ESP",
-    Description = "Show player ESP overlay",
-    CurrentValue = false,
-    Callback = function(Value)
-        PlayerESPEnabled = Value
-        if not Value then
-            ClearPlayerESP()
-        end
-    end
-})
-
-ESPTab:CreateToggle({
-    Name = "Team ESP",
-    Description = "Show team ESP overlay",
-    CurrentValue = false,
-    Callback = function(Value)
-        TeamESPEnabled = Value
-        if not Value then
-            ClearTeamESP()
-        end
+}, function()
+    local ball = workspace:FindFirstChild("Football")
+    if ball then
+        local args = {[1] = ball}
+        game:GetService("ReplicatedStorage").Packages.Knit.Services.BallService.RE.Grab:FireServer(unpack(args))
     end
 })
 
 local player = game.Players.LocalPlayer
 
-TeamTab:CreateSection("Team Selection")
+-- Категорія ESP
+local ESPCategory = Window:Category("ESP", "http://www.roblox.com/asset/?id=4483345998")
+local ESPButton = ESPCategory:Button("ESP", "http://www.roblox.com/asset/?id=4483345998")
+local ESPSection = ESPButton:Section("ESP Options", "Left")
 
-TeamTab:CreateDropdown({
-    Name = "Select Team",
+ESPSection:Toggle({
+    Title = "Football ESP",
+    Description = "Show football ESP overlay",
+    Default = false
+}, function(Value)
+    FootballESPEnabled = Value
+    if not Value then
+        ClearESP()
+    end
+})
+
+ESPSection:Toggle({
+    Title = "Player ESP",
+    Description = "Show player ESP overlay",
+    Default = false
+}, function(Value)
+    PlayerESPEnabled = Value
+    if not Value then
+        ClearPlayerESP()
+    end
+})
+
+ESPSection:Toggle({
+    Title = "Team ESP",
+    Description = "Show team ESP overlay",
+    Default = false
+}, function(Value)
+    TeamESPEnabled = Value
+    if not Value then
+        ClearTeamESP()
+    end
+})
+
+-- Категорія Team
+local TeamCategory = Window:Category("Team", "http://www.roblox.com/asset/?id=4483345998")
+local TeamButton = TeamCategory:Button("Team", "http://www.roblox.com/asset/?id=4483345998")
+local TeamSection = TeamButton:Section("Team Selection", "Left")
+
+TeamSection:Dropdown({
+    Title = "Select Team",
     Description = "Choose your team",
     Options = {"Home", "Away"},
-    CurrentOption = "Home",
-    MultipleOptions = false,
-    Callback = function(Option)
-        selectedTeam = Option
-    end
-})
+    Default = "Home"
+}, function(Option)
+    selectedTeam = Option
+end)
 
-TeamTab:CreateDropdown({
-    Name = "Select Role",
+TeamSection:Dropdown({
+    Title = "Select Role",
     Description = "Choose your role",
     Options = {"CF", "GK", "LW", "RW", "CM"},
-    CurrentOption = "CF",
-    MultipleOptions = false,
-    Callback = function(Option)
-        selectedRole = Option
-    end
-})
+    Default = "CF"
+}, function(Option)
+    selectedRole = Option
+end)
 
-TeamTab:CreateToggle({
-    Name = "Auto Join Home",
+TeamSection:Toggle({
+    Title = "Auto Join Home",
     Description = "Automatically join home team",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoJoinHomeEnabled = Value
-        if Value then
-            while autoJoinHomeEnabled do
-                if player.Team and player.Team.Name == "Visitor" then
-                    local args = {"Home", selectedRole or "CF"}
-                    game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-                end
-                task.wait(20)
+    Default = false
+}, function(Value)
+    autoJoinHomeEnabled = Value
+    if Value then
+        while autoJoinHomeEnabled do
+            if player.Team and player.Team.Name == "Visitor" then
+                local args = {"Home", selectedRole or "CF"}
+                game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
             end
+            task.wait(20)
         end
     end
 })
 
-TeamTab:CreateToggle({
-    Name = "Auto Join Away",
+TeamSection:Toggle({
+    Title = "Auto Join Away",
     Description = "Automatically join away team",
-    CurrentValue = false,
-    Callback = function(Value)
-        autoJoinAwayEnabled = Value
-        if Value then
-            while autoJoinAwayEnabled do
-                if player.Team and player.Team.Name == "Visitor" then
-                    local args = {"Away", selectedRole or "CF"}
-                    game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-                end
-                task.wait(20)
+    Default = false
+}, function(Value)
+    autoJoinAwayEnabled = Value
+    if Value then
+        while autoJoinAwayEnabled do
+            if player.Team and player.Team.Name == "Visitor" then
+                local args = {"Away", selectedRole or "CF"}
+                game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
             end
+            task.wait(20)
         end
     end
 })
 
-CharacterTab:CreateSection("Character Modifications")
+-- Категорія Modifications
+local CharacterCategory = Window:Category("Modifications", "http://www.roblox.com/asset/?id=4483345998")
+local CharacterButton = CharacterCategory:Button("Modifications", "http://www.roblox.com/asset/?id=4483345998")
+local CharacterSection = CharacterButton:Section("Character Modifications", "Left")
 
-CharacterTab:CreateToggle({
-    Name = "Infinite Stamina",
+CharacterSection:Toggle({
+    Title = "Infinite Stamina",
     Description = "Never run out of stamina",
-    CurrentValue = false,
-    Callback = function(Value)
+    Default = false
+}, function(Value)
+    if player:FindFirstChild("PlayerStats") and player.PlayerStats:FindFirstChild("Stamina") then
         if Value then
             player.PlayerStats.Stamina.Value = math.huge
-            
-            local args = {
-                [1] = 0/0
-            }
-            
+            local args = {[1] = 0/0}
             game:GetService("ReplicatedStorage"):WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("StaminaService"):WaitForChild("RE"):WaitForChild("DecreaseStamina"):FireServer(unpack(args))
         else
             player.PlayerStats.Stamina.Value = 100
         end
+    else
+        warn("PlayerStats or Stamina not found!")
     end
 })
 
-CharacterTab:CreateToggle({
-    Name = "No Ability Cooldown",
+CharacterSection:Toggle({
+    Title = "No Ability Cooldown",
     Description = "Remove cooldown from abilities",
-    CurrentValue = false,
-    Callback = function(Value)
-        local success, C = pcall(function()
-            return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
-        end)
+    Default = false
+}, function(Value)
+    local success, C = pcall(function()
+        return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
+    end)
 
-        if not success then
-            warn("AbilityController not found!")
-            return
-        end
+    if not success then
+        warn("AbilityController not found!")
+        return
+    end
 
-        if not C or not C.AbilityCooldown or type(C.AbilityCooldown) ~= "function" then
-            warn("AbilityCooldown is not a valid function!")
-            return
-        end
+    if not C or not C.AbilityCooldown or type(C.AbilityCooldown) ~= "function" then
+        warn("AbilityCooldown is not a valid function!")
+        return
+    end
 
-        if not C.OriginalAbilityCooldown then
-            C.OriginalAbilityCooldown = C.AbilityCooldown
-        end
+    if not C.OriginalAbilityCooldown then
+        C.OriginalAbilityCooldown = C.AbilityCooldown
+    end
 
-        if Value then
-            C.AbilityCooldown = function(self, abilityName, ...)
-                return C.OriginalAbilityCooldown(self, abilityName, 0, ...)
-            end
-        else
-            C.AbilityCooldown = C.OriginalAbilityCooldown
+    if Value then
+        C.AbilityCooldown = function(self, abilityName, ...)
+            return C.OriginalAbilityCooldown(self, abilityName, 0, ...)
         end
+    else
+        C.AbilityCooldown = C.OriginalAbilityCooldown
     end
 })
 
-CharacterTab:CreateToggle({
-    Name = "Fly",
+CharacterSection:Toggle({
+    Title = "Fly",
     Description = "Enable flying",
-    CurrentValue = false,
-    Callback = function(Value)
-        if Value then
-            fly()
-        else
-            workspace.Gravity = 196.2
-        end
-    end
-})
+    Default = false
+}, function(Value)
+    fly()
+end)
 
-CharacterTab:CreateSlider({
-    Name = "CFrame Speed",
+CharacterSection:Slider({
+    Title = "CFrame Speed",
     Description = "Adjust movement speed",
-    Range = {1, 500},
-    Increment = 1,
-    CurrentValue = 1,
-    Callback = function(Value)
-        getgenv().cframespeed = Value
-    end
-})
+    Default = 1,
+    Min = 1,
+    Max = 500
+}, function(Value)
+    getgenv().cframespeed = Value
+end)
 
-CharacterTab:CreateButton({
-    Name = "Reset Character",
+CharacterSection:Button({
+    Title = "Reset Character",
+    ButtonName = "Reset",
     Description = "Reset your character",
-    Callback = function()
-        if player.Character then
-            player.Character:BreakJoints()
-        end
+}, function()
+    if player.Character then
+        player.Character:BreakJoints()
     end
 })
 
-CharacterTab:CreateToggle({
-    Name = "Anti Ragdoll",
+CharacterSection:Toggle({
+    Title = "Anti Ragdoll",
     Description = "Prevent ragdolling",
-    CurrentValue = false,
-    Callback = function(Value)
-        antiRagdoll = Value
-        if Value then
-            task.spawn(function()
-                while antiRagdoll do
-                    if player.Character and player.Character:FindFirstChild("Ragdolled") then
-                        player.Character.Ragdolled:Destroy()
-                    end
-                    task.wait()
+    Default = false
+}, function(Value)
+    antiRagdoll = Value
+    if Value then
+        task.spawn(function()
+            while antiRagdoll do
+                if player.Character and player.Character:FindFirstChild("Ragdolled") then
+                    player.Character.Ragdolled:Destroy()
                 end
-            end)
-        end
+                task.wait()
+            end
+        end)
     end
 })
 
-StyleTab:CreateSection("Style Selection")
+-- Категорія Styles
+local StyleCategory = Window:Category("Styles", "http://www.roblox.com/asset/?id=4483345998")
+local StyleButton = StyleCategory:Button("Styles", "http://www.roblox.com/asset/?id=4483345998")
+local StyleSection = StyleButton:Section("Style Selection", "Left")
 
-local selectedStyle = player.PlayerStats.Style.Value
+local selectedStyle = player.PlayerStats and player.PlayerStats.Style and player.PlayerStats.Style.Value or "Default"
 
 local function applyStyle(style)
-    if player and player:FindFirstChild("PlayerStats") and player.PlayerStats:FindFirstChild("Style") then
+    if player:FindFirstChild("PlayerStats") and player.PlayerStats:FindFirstChild("Style") then
         player.PlayerStats.Style.Value = style
-        Luna:Notification({
-            Title = "Style Applied",
-            Content = "Style has been set to: " .. style,
-            Icon = "check_circle",
-            ImageSource = "Material"
-        })
     end
 end
 
-StyleTab:CreateDropdown({
-    Name = "Select Style",
+StyleSection:Dropdown({
+    Title = "Select Style",
     Description = "Choose your player style, need Reo",
     Options = {"Don Lorenzo", "Shidou", "Yukimiya", "Sae", "Kunigami", "Aiku", "Rin",
               "Karasu", "Nagi", "Reo", "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
               "Isagi", "Chigiri"},
-    CurrentOption = {selectedStyle},
-    MultipleOptions = false,
-    Callback = function(Option)
-        selectedStyle = Option
-    end
-})
+    Default = selectedStyle
+}, function(Option)
+    selectedStyle = Option
+end)
 
-StyleTab:CreateButton({
-    Name = "Confirm Style",
+StyleSection:Button({
+    Title = "Confirm Style",
+    ButtonName = "Apply",
     Description = "Apply the selected style",
-    Callback = function()
-        applyStyle(selectedStyle)
-    end
-})
+}, function()
+    applyStyle(selectedStyle)
+end)
 
-FlowTab:CreateSection("Flow Selection")
+-- Категорія Flow
+local FlowCategory = Window:Category("Flow", "http://www.roblox.com/asset/?id=4483345998")
+local FlowButton = FlowCategory:Button("Flow", "http://www.roblox.com/asset/?id=4483345998")
+local FlowSection = FlowButton:Section("Flow Selection", "Left")
 
-local selectedFlow = player.PlayerStats.Flow.Value
+local selectedFlow = player.PlayerStats and player.PlayerStats.Flow and player.PlayerStats.Flow.Value or "Default"
 
 local function applyFlow(flow)
-    if player and player:FindFirstChild("PlayerStats") and player.PlayerStats:FindFirstChild("Flow") then
+    if player:FindFirstChild("PlayerStats") and player.PlayerStats:FindFirstChild("Flow") then
         player.PlayerStats.Flow.Value = flow
-        Luna:Notification({
-            Title = "Flow Applied",
-            Content = "Flow has been set to: " .. flow,
-            Icon = "check_circle",
-            ImageSource = "Material"
-        })
     end
 end
 
-FlowTab:CreateDropdown({
-    Name = "Select Flow",
+FlowSection:Dropdown({
+    Title = "Select Flow",
     Description = "Choose your flow ability, HAVE BUGS!",
     Options = {
         "Soul Harvester", "Awakened Genius", "Dribbler",
@@ -822,73 +721,87 @@ FlowTab:CreateDropdown({
         "Monster", "King's Instinct", "Puzzle", "Ice",
         "Lightning"
     },
-    CurrentOption = {selectedFlow},
-    MultipleOptions = false,
-    Callback = function(Option)
-        selectedFlow = Option
-    end
-})
+    Default = selectedFlow
+}, function(Option)
+    selectedFlow = Option
+end)
 
-FlowTab:CreateButton({
-    Name = "Confirm Flow",
+FlowSection:Button({
+    Title = "Confirm Flow",
+    ButtonName = "Apply",
     Description = "Apply the selected flow",
-    Callback = function()
-        applyFlow(selectedFlow)
-    end
-})
+}, function()
+    applyFlow(selectedFlow)
+end)
 
-CosmeticTab:CreateSection("Cosmetic Selection")
+-- Категорія Cosmetics
+local CosmeticCategory = Window:Category("Cosmetics", "http://www.roblox.com/asset/?id=4483345998")
+local CosmeticButton = CosmeticCategory:Button("Cosmetics", "http://www.roblox.com/asset/?id=4483345998")
+local CosmeticSection = CosmeticButton:Section("Cosmetic Selection", "Left")
 
-CosmeticTab:CreateDropdown({
-    Name = "Select Cosmetic",
+CosmeticSection:Dropdown({
+    Title = "Select Cosmetic",
     Description = "Choose a cosmetic to equip",
     Options = {"Feature unavailable"},
-    CurrentOption = {"Feature unavailable"},
-    MultipleOptions = false,
-    Callback = function(Option)
-        print("Feature unavailable")
-    end
-})
+    Default = "Feature unavailable"
+}, function(Option)
+    print("Feature unavailable")
+end)
 
-CosmeticTab:CreateButton({
-    Name = "Confirm Cosmetic",
+CosmeticSection:Button({
+    Title = "Confirm Cosmetic",
+    ButtonName = "Apply",
     Description = "Equip the selected cosmetic (ignores inventory)",
-    Callback = function()
-        Luna:Notification({
-            Title = "Feature Unavailable",
-            Content = "Will be added in the next update",
-            Icon = "info",
-            ImageSource = "Material"
-        })
-    end
-})
+}, function()
+    print("Feature unavailable")
+end)
 
+-- Категорія UI Settings
+local UICategory = Window:Category("UI Settings", "http://www.roblox.com/asset/?id=4483345998")
+local UIButton = UICategory:Button("UI Settings", "http://www.roblox.com/asset/?id=4483345998")
+local UISection = UIButton:Section("UI Controls", "Left")
 
-UITab:CreateButton({
-    Name = "Destroy GUI",
+UISection:Button({
+    Title = "Destroy GUI",
+    ButtonName = "Destroy",
     Description = "Close the GUI",
-    Callback = function()
-        for _, connection in pairs(getconnections(game:GetService("CoreGui").ChildAdded)) do
-            connection:Disable()
-        end
-        game:GetService("CoreGui").Luna:Destroy()
-    end
-})
+}, function()
+    -- ReduxHubUI не має методу Destroy, тому видаляємо вручну
+    local gui = game:GetService("CoreGui"):FindFirstChild("ReduxHubUI")
+    if gui then gui:Destroy() end
+end)
 
-UITab:CreateButton({
-    Name = "Rejoin Game",
+UISection:Button({
+    Title = "Rejoin Game",
+    ButtonName = "Rejoin",
     Description = "Rejoin the current game",
-    Callback = function()
-        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
-    end
-})
-UITab:BuildThemeSection()
+}, function()
+    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
+end)
 
+-- Додаємо аватар і нікнейм вручну
+local UserId = player.UserId
+local PlayerName = player.Name
+local AvatarImageUrl = Players:GetUserThumbnailAsync(UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
 
-UITab:BuildConfigSection()
-Luna:Notification({
-    Title = "Config Loaded",
-    Content = "Your saved configuration has been automatically loaded.",
-    Icon = "check_circle",
-    ImageSource = "Material"
-})
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ReduxHubUI_Avatar"
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local AvatarFrame = Instance.new("ImageLabel")
+AvatarFrame.Image = AvatarImageUrl
+AvatarFrame.Size = UDim2.new(0, 48, 0, 48)
+AvatarFrame.Position = UDim2.new(0, 5, 1, -53)
+AvatarFrame.AnchorPoint = Vector2.new(0, 1)
+AvatarFrame.BackgroundTransparency = 1
+AvatarFrame.Parent = ScreenGui
+
+local NameLabel = Instance.new("TextLabel")
+NameLabel.Text = PlayerName
+NameLabel.Size = UDim2.new(0, 100, 0, 20)
+NameLabel.Position = UDim2.new(0, 58, 1, -20)
+NameLabel.AnchorPoint = Vector2.new(0, 1)
+NameLabel.BackgroundTransparency = 1
+NameLabel.TextColor3 = Color3.new(1, 1, 1)
+NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+NameLabel.Parent = ScreenGui
