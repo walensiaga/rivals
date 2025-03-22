@@ -404,12 +404,13 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
-local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))()
+local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))
 if not ui then
-    warn("Failed to load Dollarware UI Library")
+    warn("Failed to load UI Library")
     return
 end
 
+-- Ініціалізуємо UI з налаштуваннями
 local UI = ui({
     rounding = roundingEnabled,
     theme = currentTheme,
