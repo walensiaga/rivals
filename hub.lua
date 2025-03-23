@@ -49,6 +49,9 @@ local enemyEspObjects = {}
 local aimCircle = nil
 local silentAimGoalEnabled = false
 local aimRadius = 5
+local wheelCords = Vector3.new(117.8, -443.9, -258.9)
+local valentineCords = Vector3.new(-23.66, -493.26, -129.15)
+local defaultCords = Vector3.new(5.9, 11.2, -40.8)
 
 -- Змінні для кастомізації UI
 local currentTheme = "Dark" -- Fluent UI підтримує свої теми
@@ -534,7 +537,8 @@ local Window = Fluent:CreateWindow({
 
 -- Створюємо вкладки з іконками
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
-local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
+local TeleportsTab = Window:AddTab({ Title = "Teleports", Icon = "AirplaneLandingRegular" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "airplane-landing" })
 local TeamTab = Window:AddTab({ Title = "Team", Icon = "users" })
 local ModsTab = Window:AddTab({ Title = "Modifications", Icon = "wrench" })
 local StylesTab = Window:AddTab({ Title = "Styles", Icon = "palette" })
@@ -660,6 +664,62 @@ MainTab:AddSlider("AimRadius", {
             local team = player.Team
             local targetPosition = findSafeGoalPosition(team)
             drawAimCircle(targetPosition)
+        end
+    end
+})
+
+TeleportsTab:AddSection("Teleport Options")
+
+TeleportsTab:AddButton({
+    Title = "Golden Wheel TP",
+    Callback = function()
+        if player.Character and rootPart then
+            rootPart.CFrame = CFrame.new(wheelCords)
+            Fluent:Notify({
+                Title = "Teleport",
+                Content = "Teleported to Golden Wheel!",
+                Duration = 3
+            })
+            task.wait(2)
+            rootPart.CFrame = CFrame.new(defaultCords)
+            Fluent:Notify({
+                Title = "Teleport",
+                Content = "Returned to default position!",
+                Duration = 3
+            })
+        else
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Character or root part not found!",
+                Duration = 3
+            })
+        end
+    end
+})
+
+TeleportsTab:AddButton({
+    Title = "Valentines Quests TP",
+    Callback = function()
+        if player.Character and rootPart then
+            rootPart.CFrame = CFrame.new(valentineCords)
+            Fluent:Notify({
+                Title = "Teleport",
+                Content = "Teleported to Valentines Quests!",
+                Duration = 3
+            })
+            task.wait(2)
+            rootPart.CFrame = CFrame.new(defaultCords)
+            Fluent:Notify({
+                Title = "Teleport",
+                Content = "Returned to default position!",
+                Duration = 3
+            })
+        else
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Character or root part not found!",
+                Duration = 3
+            })
         end
     end
 })
