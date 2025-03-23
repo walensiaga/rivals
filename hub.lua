@@ -406,7 +406,7 @@ local highlight = nil
 
 local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))
 if not ui then
-    warn("Failed to load UI Library")
+    warn("Failed to load Dollarware UI Library")
     return
 end
 
@@ -418,7 +418,7 @@ local UI = ui({
 })
 
 local windowSettings = {
-    text = "Redux (by qzwtrp)",
+    text = "MoonShine (Blue Lock Rivals)",
     resize = true,
     size = Vector2.new(600, 500),
     position = UDim2.fromScale(0.5, 0.5),
