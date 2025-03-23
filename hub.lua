@@ -427,8 +427,6 @@ local FlowTab = Window:AddTab({ Title = "Flow", Icon = "" })
 local CosmeticsTab = Window:AddTab({ Title = "Cosmetics", Icon = "" })
 local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "" })
 
-local window = UI.newWindow(windowSettings)
-
 -- Вкладка 1: Main (Autofarm Features)
 MainTab:AddSection("Autofarm Features")
 
@@ -475,7 +473,7 @@ MainTab:AddToggle("AutoGoal", {
     end
 })
 
-MainTab:AddToggle("AutoTP Ball", {
+MainTab:AddToggle("AutoTPBall", {
     Title = "Auto TP Ball",
     Default = false,
     Callback = function(Value)
@@ -486,7 +484,7 @@ MainTab:AddToggle("AutoTP Ball", {
     end
 })
 
-MainTab:AddToggle("Auto GoalKeeper", {
+MainTab:AddToggle("AutoGoalKeeper", {
     Title = "Auto Goal Keeper",
     Default = false,
     Callback = function(Value)
@@ -497,7 +495,7 @@ MainTab:AddToggle("Auto GoalKeeper", {
     end
 })
 
-MainTab:AddSlider("GoalKeeper Prediction Distance", {
+MainTab:AddSlider("GoalKeeperPredictionDistance", {
     Title = "Goal Keeper Prediction Distance",
     Description = "Adjust prediction distance for goalkeeper",
     Default = 1,
@@ -523,7 +521,7 @@ MainTab:AddButton({
 -- Вкладка 2: ESP
 ESPTab:AddSection("ESP Options")
 
-ESPTab:AddToggle("Football ESP", {
+ESPTab:AddToggle("FootballESP", {
     Title = "Football ESP",
     Default = false,
     Callback = function(Value)
@@ -534,7 +532,7 @@ ESPTab:AddToggle("Football ESP", {
     end
 })
 
-ESPTab:AddToggle("Player ESP", {
+ESPTab:AddToggle("PlayerESP", {
     Title = "Player ESP",
     Default = false,
     Callback = function(Value)
@@ -545,7 +543,7 @@ ESPTab:AddToggle("Player ESP", {
     end
 })
 
-ESPTab:AddToggle("Team ESP", {
+ESPTab:AddToggle("TeamESP", {
     Title = "Team ESP",
     Default = false,
     Callback = function(Value)
@@ -559,7 +557,7 @@ ESPTab:AddToggle("Team ESP", {
 -- Вкладка 3: Team
 TeamTab:AddSection("Team Selection")
 
-TeamTab:AddDropdown("Select Team", {
+TeamTab:AddDropdown("SelectTeam", {
     Title = "Select Team",
     Values = {"Home", "Away"},
     Default = "Home",
@@ -568,7 +566,7 @@ TeamTab:AddDropdown("Select Team", {
     end
 })
 
-TeamTab:AddDropdown("Select Role", {
+TeamTab:AddDropdown("SelectRole", {
     Title = "Select Role",
     Values = {"CF", "LW", "RW", "CM", "GK"},
     Default = "CF",
@@ -577,7 +575,7 @@ TeamTab:AddDropdown("Select Role", {
     end
 })
 
-TeamTab:AddToggle("Auto Join Home", {
+TeamTab:AddToggle("AutoJoinHome", {
     Title = "Auto Join Home",
     Default = false,
     Callback = function(Value)
@@ -594,7 +592,7 @@ TeamTab:AddToggle("Auto Join Home", {
     end
 })
 
-TeamTab:AddToggle("Auto Join Away", {
+TeamTab:AddToggle("AutoJoinAway", {
     Title = "Auto Join Away",
     Default = false,
     Callback = function(Value)
@@ -614,7 +612,7 @@ TeamTab:AddToggle("Auto Join Away", {
 -- Вкладка 4: Modifications
 ModsTab:AddSection("Character Modifications")
 
-ModsTab:AddToggle("Infinite Stamina", {
+ModsTab:AddToggle("InfiniteStamina", {
     Title = "Infinite Stamina",
     Default = false,
     Callback = function(Value)
@@ -632,7 +630,7 @@ ModsTab:AddToggle("Infinite Stamina", {
     end
 })
 
-ModsTab:AddToggle("NoAbility Cooldown", {
+ModsTab:AddToggle("NoAbilityCooldown", {
     Title = "No Ability Cooldown",
     Default = false,
     Callback = function(Value)
@@ -672,7 +670,7 @@ ModsTab:AddToggle("Fly", {
     end
 })
 
-ModsTab:AddSlider("CFrame Speed", {
+ModsTab:AddSlider("CFrameSpeed", {
     Title = "CFrame Speed",
     Description = "Adjust CFrame speed",
     Default = 1,
@@ -693,7 +691,7 @@ ModsTab:AddButton({
     end
 })
 
-ModsTab:AddToggle("Anti Ragdoll", {
+ModsTab:AddToggle("AntiRagdoll", {
     Title = "Anti Ragdoll",
     Default = false,
     Callback = function(Value)
@@ -714,7 +712,7 @@ ModsTab:AddToggle("Anti Ragdoll", {
 -- Вкладка 5: Styles
 StylesTab:AddSection("Style Selection")
 
-StylesTab:AddDropdown("Select Style", {
+StylesTab:AddDropdown("SelectStyle", {
     Title = "Select Style",
     Values = {"Sae", "NEL Isagi", "Don Lorenzo", "Shidou", "Yukimiya", "Kurona", "Kunigami", "Aiku", "Rin",
               "Karasu", "Nagi", "Reo", "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
@@ -735,7 +733,7 @@ StylesTab:AddButton({
 -- Вкладка 6: Flow
 FlowTab:AddSection("Flow Selection")
 
-FlowTab:AddDropdown("Select Flow", {
+FlowTab:AddDropdown("SelectFlow", {
     Title = "Select Flow",
     Values = {
         "Soul Harvester", "Awakened Genius", "Dribbler",
@@ -760,33 +758,27 @@ FlowTab:AddButton({
 -- Вкладка 7: Cosmetics
 CosmeticsTab:AddSection("Cosmetic Selection")
 
-CosmeticsTab:AddDropdown("Select Cosmetic", {
+CosmeticsTab:AddDropdown("SelectCosmetic", {
     Title = "Select Cosmetic",
     Values = {"Feature unavailable"},
     Default = "Feature unavailable",
     Callback = function(Option)
-                Fluent:Notify({
-                Title = "Error",
-                Content = "Feature unavailable!",
-                Duration = 3
-            })
-        end
-    end
-})
+        Fluent:Notify({
+            Title = "Error",
+            Content = "Feature unavailable!",
+            Duration = 3
+        })
     end
 })
 
 CosmeticsTab:AddButton({
     Title = "Confirm Cosmetic",
     Callback = function()
-                Fluent:Notify({
-                Title = "Error",
-                Content = "Feature unavailable!",
-                Duration = 3
-            })
-        end
-    end
-})
+        Fluent:Notify({
+            Title = "Error",
+            Content = "Feature unavailable!",
+            Duration = 3
+        })
     end
 })
 
@@ -810,7 +802,7 @@ SettingsTab:AddButton({
 -- Секція для кастомізації UI
 SettingsTab:AddSection("UI Customization")
 
-SettingsTab:AddDropdown("Select Theme", {
+SettingsTab:AddDropdown("SelectTheme", {
     Title = "Select Theme",
     Values = {"Dark", "Light", "Aqua", "Jester"},
     Default = currentTheme,
@@ -830,7 +822,7 @@ SettingsTab:AddSection("Config Management")
 local configName = "default"
 local configs = {"default"}
 
-SettingsTab:AddInput("Config Name", {
+SettingsTab:AddInput("ConfigName", {
     Title = "Config Name",
     Placeholder = "Enter config name...",
     Callback = function(text)
