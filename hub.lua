@@ -46,6 +46,9 @@ local flyEnabled = false -- Додаємо змінну для польоту
 local playerEspObjects = {}
 local teamEspObjects = {}
 local enemyEspObjects = {}
+local aimCircle = nil
+local silentAimGoalEnabled = false
+local aimRadius = 5
 
 -- Змінні для кастомізації UI
 local currentTheme = "Dark" -- Fluent UI підтримує свої теми
@@ -144,6 +147,124 @@ local function DrawFootballESP(Football)
     DrawQuad(Corners[3], Corners[4], Corners[8], Corners[7])
     DrawQuad(Corners[1], Corners[3], Corners[7], Corners[5])
     DrawQuad(Corners[2], Corners[4], Corners[8], Corners[6])
+end
+
+-- Функція для малювання круга на екрані
+local function drawAimCircle(targetPosition)
+    if aimCircle then
+        aimCircle:Remove()
+        aimCircle = nil
+    end
+
+    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPosition)
+    if not onScreen then return end
+
+    local radiusInPixels = (aimRadius / (rootPart.Position - Camera.CFrame.Position).Magnitude) * Camera.ViewportSize.Y
+
+    aimCircle = Drawing.new("Circle")
+    aimCircle.Position = Vector2.new(screenPos.X, screenPos.Y)
+    aimCircle.Radius = radiusInPixels
+    aimCircle.Color = Color3.fromRGB(255, 0, 0)
+    aimCircle.Thickness = 2
+    aimCircle.Filled = false
+    aimCircle.Transparency = 0.7
+    aimCircle.Visible = true
+end
+
+-- Очищення круга
+local function clearAimCircle()
+    if aimCircle then
+        aimCircle:Remove()
+        aimCircle = nil
+    end
+end
+
+-- Оновлена функція для пошуку безпечної позиції з урахуванням команд
+local function findSafeGoalPosition(team)
+    -- Визначаємо цільові ворота залежно від команди
+    local goalPosition = team.Name == "Home" and awayGoalPosition or homeGoalPosition
+    local goalkeeper = nil
+    
+    -- Пошук голкіпера ворожої команди
+    for _, otherPlayer in ipairs(Players:GetPlayers()) do
+        if otherPlayer ~= player and otherPlayer.Team ~= player.Team then
+            local role = otherPlayer:FindFirstChild("PlayerStats") and otherPlayer.PlayerStats:FindFirstChild("Role")
+            if role and role.Value == "GK" then
+                goalkeeper = otherPlayer.Character and otherPlayer.Character:FindFirstChild("HumanoidRootPart")
+                break
+            end
+        end
+    end
+
+    -- Генерація випадкової точки в межах радіусу
+    local randomAngle = math.random() * 2 * math.pi
+    local randomRadius = math.random() * aimRadius
+    local offsetX = math.cos(randomAngle) * randomRadius
+    local offsetZ = math.sin(randomAngle) * randomRadius
+    
+    local targetPosition = goalPosition + Vector3.new(offsetX, 0, offsetZ)
+    
+    -- Перевірка, чи позиція поза досяжністю голкіпера
+    if goalkeeper then
+        local distanceToGK = (targetPosition - goalkeeper.Position).Magnitude
+        if distanceToGK < 10 then
+            return findSafeGoalPosition(team)
+        end
+    end
+    
+    return targetPosition
+end
+
+-- Оновлена функція silentAimGoal
+local function silentAimGoal()
+    while silentAimGoalEnabled do
+        if not checkTeam() or not hasBall() then
+            clearAimCircle()
+            task.wait()
+            continue
+        end
+
+        local team = player.Team
+        local targetPosition = findSafeGoalPosition(team)
+        
+        -- Малюємо круг на екрані для цільових воріт
+        drawAimCircle(targetPosition)
+        
+        -- Напрямок удару
+        local direction = (targetPosition - rootPart.Position).Unit
+        
+        -- Виконання удару
+        ballServiceRemote:FireServer(1, nil, nil, direction)
+        
+        -- Блокування взаємодії з м'ячем на 3.5 секунди
+        local ball = workspace:FindFirstChild("Football")
+        if ball then
+            ball.CanCollide = false
+            clearAimCircle() -- Прибираємо круг після удару
+            -- Додай у silentAimGoal замість task.wait(3.5):
+if ball then
+    ball.CanCollide = false
+    local goalConnection
+    goalConnection = game:GetService("ReplicatedStorage"):WaitForChild("GoalScored").OnClientEvent:Connect(function()
+        ball.CanCollide = true
+        if goalConnection then
+            goalConnection:Disconnect()
+        end
+    end)
+    -- Тайм-аут на випадок, якщо гол не відбудеться
+    task.delay(3.5, function()
+        ball.CanCollide = true
+        if goalConnection then
+            goalConnection:Disconnect()
+        end
+    end)
+end
+            ball.CanCollide = true
+        end
+        
+        task.wait(0.1) -- Затримка перед наступним ударом
+    end
+    clearAimCircle() -- Очищаємо круг, коли функція вимикається
 end
 
 local function FootballESP()
@@ -425,8 +546,8 @@ end
 
 -- Створюємо вікно
 local Window = Fluent:CreateWindow({
-    Title = "MoonShine (Blue Lock Rivals)",
-    SubTitle = "",
+    Title = "Redux Hub",
+    SubTitle = "by qzwtrp",
     TabWidth = 160,
     Size = UDim2.fromOffset(600, 500),
     Theme = currentTheme,
@@ -531,6 +652,37 @@ MainTab:AddButton({
         if ball then
             local args = {[1] = ball}
             game:GetService("ReplicatedStorage").Packages.Knit.Services.BallService.RE.Grab:FireServer(unpack(args))
+        end
+    end
+})
+
+-- Оновлений перемикач у MainTab
+MainTab:AddToggle("SilentAimGoal", {
+    Title = "Silent Aim Goal",
+    Default = false,
+    Callback = function(Value)
+        silentAimGoalEnabled = Value
+        if Value then
+            task.spawn(silentAimGoal)
+        else
+            clearAimCircle()
+        end
+    end
+})
+
+MainTab:AddSlider("AimRadius", {
+    Title = "Aim Radius",
+    Description = "Adjust aiming circle radius",
+    Default = 5,
+    Min = 1,
+    Max = 20,
+    Rounding = 1,
+    Callback = function(Value)
+        aimRadius = Value
+        if silentAimGoalEnabled and hasBall() then
+            local team = player.Team
+            local targetPosition = findSafeGoalPosition(team)
+            drawAimCircle(targetPosition)
         end
     end
 })
