@@ -668,17 +668,28 @@ MainTab:AddSlider("AimRadius", {
     end
 })
 
+-- Секція Teleports
 TeleportsTab:AddSection("Teleport Options")
 
 TeleportsTab:AddButton({
     Title = "Golden Wheel TP",
     Callback = function()
         if player.Character and rootPart then
+            local originalPosition = rootPart.Position
+            
             rootPart.CFrame = CFrame.new(wheelCords)
             Fluent:Notify({
                 Title = "Teleport",
                 Content = "Teleported to Golden Wheel!",
                 Duration = 3
+            })
+            -- Повернення на початкову позицію
+            rootPart.CFrame = CFrame.new(originalPosition)
+            Fluent:Notify({
+                Title = "Teleport",
+                Content = "Returned to original position!",
+                Duration = 3
+            })
         else
             Fluent:Notify({
                 Title = "Error",
@@ -693,10 +704,19 @@ TeleportsTab:AddButton({
     Title = "Valentines Quests TP",
     Callback = function()
         if player.Character and rootPart then
+            local originalPosition = rootPart.Position
+            
             rootPart.CFrame = CFrame.new(valentineCords)
             Fluent:Notify({
                 Title = "Teleport",
                 Content = "Teleported to Valentines Quests!",
+                Duration = 3
+            })
+            -- Повернення на початкову позицію
+            rootPart.CFrame = CFrame.new(originalPosition)
+            Fluent:Notify({
+                Title = "Teleport",
+                Content = "Returned to original position!",
                 Duration = 3
             })
         else
