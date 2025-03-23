@@ -675,14 +675,20 @@ TeleportsTab:AddButton({
     Title = "Golden Wheel TP",
     Callback = function()
         if player.Character and rootPart then
+            -- Зберігаємо поточну позицію
             local originalPosition = rootPart.Position
             
+            -- Телепорт до Golden Wheel
             rootPart.CFrame = CFrame.new(wheelCords)
             Fluent:Notify({
                 Title = "Teleport",
                 Content = "Teleported to Golden Wheel!",
                 Duration = 3
             })
+            
+            -- Чекаємо 2 секунди
+            task.wait(0.1)
+            
             -- Повернення на початкову позицію
             rootPart.CFrame = CFrame.new(originalPosition)
             Fluent:Notify({
@@ -704,14 +710,20 @@ TeleportsTab:AddButton({
     Title = "Valentines Quests TP",
     Callback = function()
         if player.Character and rootPart then
+            -- Зберігаємо поточну позицію
             local originalPosition = rootPart.Position
             
+            -- Телепорт до Valentines Quests
             rootPart.CFrame = CFrame.new(valentineCords)
             Fluent:Notify({
                 Title = "Teleport",
                 Content = "Teleported to Valentines Quests!",
                 Duration = 3
             })
+            
+            -- Чекаємо 2 секунди
+            task.wait(0.1)
+            
             -- Повернення на початкову позицію
             rootPart.CFrame = CFrame.new(originalPosition)
             Fluent:Notify({
