@@ -404,9 +404,17 @@ local tracer = nil
 local distanceText = nil
 local highlight = nil
 
+-- Завантажуємо Dollarware UI Library
 local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))
 if not ui then
     warn("Failed to load Dollarware UI Library")
+    return
+end
+
+-- Дебаг: Перевіряємо, що повертає ui
+print("ui type:", type(ui))
+if type(ui) ~= "function" then
+    warn("ui is not a function, cannot initialize UI!")
     return
 end
 
@@ -417,12 +425,21 @@ local UI = ui({
     smoothDragging = smoothDraggingEnabled
 })
 
+-- Дебаг: Перевіряємо, що повертає UI
+print("UI type:", type(UI))
+if type(UI) ~= "table" then
+    warn("UI is not a table, initialization failed!")
+    return
+end
+print("UI.newWindow type:", type(UI.newWindow))
+
+-- Налаштування для вікна
 local windowSettings = {
     text = "MoonShine (Blue Lock Rivals)",
     resize = true,
     size = Vector2.new(600, 500),
     position = UDim2.fromScale(0.5, 0.5),
-    icon = "rbxassetid://9651932657"
+    -- Прибираємо іконку через помилки MeshContentProvider
 }
 
 local window = UI.newWindow(windowSettings)
