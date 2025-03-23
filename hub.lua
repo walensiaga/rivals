@@ -215,20 +215,16 @@ local function findSafeGoalPosition(team)
     return targetPosition
 end
 
--- Оновлена функція silentAimGoal
+-- Функція для silent aimgoal
 local function silentAimGoal()
     while silentAimGoalEnabled do
         if not checkTeam() or not hasBall() then
-            clearAimCircle()
             task.wait()
             continue
         end
 
         local team = player.Team
         local targetPosition = findSafeGoalPosition(team)
-        
-        -- Малюємо круг на екрані для цільових воріт
-        drawAimCircle(targetPosition)
         
         -- Напрямок удару
         local direction = (targetPosition - rootPart.Position).Unit
@@ -240,31 +236,12 @@ local function silentAimGoal()
         local ball = workspace:FindFirstChild("Football")
         if ball then
             ball.CanCollide = false
-            clearAimCircle() -- Прибираємо круг після удару
-            -- Додай у silentAimGoal замість task.wait(3.5):
-if ball then
-    ball.CanCollide = false
-    local goalConnection
-    goalConnection = game:GetService("ReplicatedStorage"):WaitForChild("GoalScored").OnClientEvent:Connect(function()
-        ball.CanCollide = true
-        if goalConnection then
-            goalConnection:Disconnect()
-        end
-    end)
-    -- Тайм-аут на випадок, якщо гол не відбудеться
-    task.delay(3.5, function()
-        ball.CanCollide = true
-        if goalConnection then
-            goalConnection:Disconnect()
-        end
-    end)
-end
+            task.wait(3.5)
             ball.CanCollide = true
         end
         
         task.wait(0.1) -- Затримка перед наступним ударом
     end
-    clearAimCircle() -- Очищаємо круг, коли функція вимикається
 end
 
 local function FootballESP()
