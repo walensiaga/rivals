@@ -517,7 +517,7 @@ end
 -- Завантажуємо Fluent UI
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 if not Fluent then
-    warn("Failed to load Fluent UI Library")
+    warn("Failed to load UI Library")
     return
 end
 
@@ -538,7 +538,7 @@ local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
 local TeamTab = Window:AddTab({ Title = "Team", Icon = "users" })
 local ModsTab = Window:AddTab({ Title = "Modifications", Icon = "wrench" })
 local StylesTab = Window:AddTab({ Title = "Styles", Icon = "palette" })
-local FlowTab = Window:AddTab({ Title = "Flow", Icon = "zap" })
+local FlowTab = Window:AddTab({ Title = "Flow", Icon = "grape" })
 local CosmeticsTab = Window:AddTab({ Title = "Cosmetics", Icon = "gift" })
 local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
