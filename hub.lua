@@ -537,7 +537,7 @@ local Window = Fluent:CreateWindow({
 
 -- Створюємо вкладки з іконками
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
-local TeleportsTab = Window:AddTab({ Title = "Teleports", Icon = "airplane" })
+local TeleportsTab = Window:AddTab({ Title = "Teleports", Icon = "plane" })
 local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
 local TeamTab = Window:AddTab({ Title = "Team", Icon = "users" })
 local ModsTab = Window:AddTab({ Title = "Modifications", Icon = "wrench" })
