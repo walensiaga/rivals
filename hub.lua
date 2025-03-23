@@ -942,33 +942,6 @@ SettingsTab:AddButton({
     end
 })
 
--- Додаємо аватар і нікнейм
-local UserId = player.UserId
-local PlayerName = player.Name
-local AvatarImageUrl = Players:GetUserThumbnailAsync(UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size48x48)
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Redux_Avatar"
-ScreenGui.Parent = game:GetService("CoreGui")
-
-local AvatarFrame = Instance.new("ImageLabel")
-AvatarFrame.Image = AvatarImageUrl
-AvatarFrame.Size = UDim2.new(0, 48, 0, 48)
-AvatarFrame.Position = UDim2.new(0, 5, 1, -53)
-AvatarFrame.AnchorPoint = Vector2.new(0, 1)
-AvatarFrame.BackgroundTransparency = 1
-AvatarFrame.Parent = ScreenGui
-
-local NameLabel = Instance.new("TextLabel")
-NameLabel.Text = PlayerName
-NameLabel.Size = UDim2.new(0, 100, 0, 20)
-NameLabel.Position = UDim2.new(0, 58, 1, -20)
-NameLabel.AnchorPoint = Vector2.new(0, 1)
-NameLabel.BackgroundTransparency = 1
-NameLabel.TextColor3 = Color3.new(1, 1, 1)
-NameLabel.TextXAlignment = Enum.TextXAlignment.Left
-NameLabel.Parent = ScreenGui
-
 -- Відкриваємо першу вкладку за замовчуванням
 Window:SelectTab(1)
 
