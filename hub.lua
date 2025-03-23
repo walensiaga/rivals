@@ -2,8 +2,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
-local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
+local HttpService = game:GetService("HttpService")
 local ballServiceRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("BallService"):WaitForChild("RE"):WaitForChild("Shoot")
 local slideRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("BallService"):WaitForChild("RE"):WaitForChild("Slide")
 local character = player.Character or player.CharacterAdded:Wait()
@@ -33,7 +33,7 @@ local MAX_DISTANCE = 3
 local tracer = nil
 local distanceText = nil
 local highlight = nil
-local roles = {"CF", "CM", "LW", "RW", "GK"}
+local roles = {"CF", "LW", "RW", "CM", "GK"}
 local teams = {"Home", "Away"}
 local selectedTeam = "Home"
 local selectedRole = "CF"
@@ -45,10 +45,12 @@ local playerEspObjects = {}
 local teamEspObjects = {}
 local enemyEspObjects = {}
 
-local currentTheme = "cherry"
+-- Змінні для кастомізації UI
+local currentTheme = "Dark" -- Fluent UI підтримує свої теми
 local roundingEnabled = false
 local smoothDraggingEnabled = true
 
+-- Функції для ESP
 local function ClearESP()
     for _, line in pairs(Lines) do
         if line then line:Remove() end
@@ -397,60 +399,43 @@ end
 
 RunService.RenderStepped:Connect(FootballESP)
 
-local playerEspObjects = {}
-local teamEspObjects = {}
-local enemyEspObjects = {}
-local tracer = nil
-local distanceText = nil
-local highlight = nil
-
--- Завантажуємо Dollarware UI Library
-local ui = loadstring(game:HttpGet('https://raw.githubusercontent.com/topitbopit/dollarware/main/library.lua'))
-if not ui then
-    warn("Failed to load Dollarware UI Library")
+-- Завантажуємо Fluent UI
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+if not Fluent then
+    warn("Failed to load Fluent UI Library")
     return
 end
 
--- Дебаг: Перевіряємо, що повертає ui
-print("ui type:", type(ui))
-if type(ui) ~= "function" then
-    warn("ui is not a function, cannot initialize UI!")
-    return
-end
-
--- Ініціалізуємо UI з налаштуваннями
-local UI = ui({
-    rounding = roundingEnabled,
-    theme = currentTheme,
-    smoothDragging = smoothDraggingEnabled
+-- Створюємо вікно
+local Window = Fluent:CreateWindow({
+    Title = "MoonShine (Blue Lock Rivals)",
+    SubTitle = "",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(600, 500),
+    Theme = currentTheme,
+    Acrylic = true,
+    MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Дебаг: Перевіряємо, що повертає UI
-print("UI type:", type(UI))
-if type(UI) ~= "table" then
-    warn("UI is not a table, initialization failed!")
-    return
-end
-print("UI.newWindow type:", type(UI.newWindow))
-
--- Налаштування для вікна
-local windowSettings = {
-    text = "MoonShine (Blue Lock Rivals)",
-    resize = true,
-    size = Vector2.new(600, 500),
-    position = UDim2.fromScale(0.5, 0.5),
-    -- Прибираємо іконку через помилки MeshContentProvider
-}
+-- Створюємо вкладки
+local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "" })
+local TeamTab = Window:AddTab({ Title = "Team", Icon = "" })
+local ModsTab = Window:AddTab({ Title = "Modifications", Icon = "" })
+local StylesTab = Window:AddTab({ Title = "Styles", Icon = "" })
+local FlowTab = Window:AddTab({ Title = "Flow", Icon = "" })
+local CosmeticsTab = Window:AddTab({ Title = "Cosmetics", Icon = "" })
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "" })
 
 local window = UI.newWindow(windowSettings)
 
 -- Вкладка 1: Main (Autofarm Features)
-local mainMenu = window:newMenu("Main") -- Прибираємо іконку
-local mainSection = mainMenu:newSection("Autofarm Features"
+MainTab:AddSection("Autofarm Features")
 
-mainSection:addToggle({
-    text = "Autofarm All",
-    callback = function(Value)
+MainTab:AddToggle("AutofarmAll", {
+    Title = "Autofarm All",
+    Default = false,
+    Callback = function(Value)
         autofarmEnabled = Value
         autoGoalEnabled = Value
         autoStealEnabled = Value
@@ -468,9 +453,10 @@ mainSection:addToggle({
     end
 })
 
-mainSection:addToggle({
-    text = "Auto Steal",
-    callback = function(Value)
+MainTab:AddToggle("AutoSteal", {
+    Title = "Auto Steal",
+    Default = false,
+    Callback = function(Value)
         autoStealEnabled = Value
         if Value then
             task.spawn(autoSteal)
@@ -478,9 +464,10 @@ mainSection:addToggle({
     end
 })
 
-mainSection:addToggle({
-    text = "Auto Goal",
-    callback = function(Value)
+MainTab:AddToggle("AutoGoal", {
+    Title = "Auto Goal",
+    Default = false,
+    Callback = function(Value)
         autoGoalEnabled = Value
         if Value then
             task.spawn(autoGoal)
@@ -488,9 +475,10 @@ mainSection:addToggle({
     end
 })
 
-mainSection:addToggle({
-    text = "Auto TP Ball",
-    callback = function(Value)
+MainTab:AddToggle("AutoTP Ball", {
+    Title = "Auto TP Ball",
+    Default = false,
+    Callback = function(Value)
         autoTPBallEnabled = Value
         if Value then
             task.spawn(autoTPBall)
@@ -498,9 +486,10 @@ mainSection:addToggle({
     end
 })
 
-mainSection:addToggle({
-    text = "Auto Goal Keeper",
-    callback = function(Value)
+MainTab:AddToggle("Auto GoalKeeper", {
+    Title = "Auto Goal Keeper",
+    Default = false,
+    Callback = function(Value)
         autoGoalKeeperEnabled = Value
         if Value then
             task.spawn(autoGoalKeeper)
@@ -508,19 +497,21 @@ mainSection:addToggle({
     end
 })
 
-mainSection:addSlider({
-    text = "Goal Keeper Prediction Distance",
-    min = 0,
-    max = 10,
-    default = 1,
-    callback = function(Value)
+MainTab:AddSlider("GoalKeeper Prediction Distance", {
+    Title = "Goal Keeper Prediction Distance",
+    Description = "Adjust prediction distance for goalkeeper",
+    Default = 1,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+    Callback = function(Value)
         predictionDistance = Value
     end
 })
 
-mainSection:addButton({
-    text = "Bring Football",
-    callback = function()
+MainTab:AddButton({
+    Title = "Bring Football",
+    Callback = function()
         local ball = workspace:FindFirstChild("Football")
         if ball then
             local args = {[1] = ball}
@@ -530,12 +521,12 @@ mainSection:addButton({
 })
 
 -- Вкладка 2: ESP
-local espMenu = window:newMenu("ESP")
-local espSection = espMenu:newSection("ESP Options")
+ESPTab:AddSection("ESP Options")
 
-espSection:addToggle({
-    text = "Football ESP",
-    callback = function(Value)
+ESPTab:AddToggle("Football ESP", {
+    Title = "Football ESP",
+    Default = false,
+    Callback = function(Value)
         FootballESPEnabled = Value
         if not Value then
             ClearESP()
@@ -543,9 +534,10 @@ espSection:addToggle({
     end
 })
 
-espSection:addToggle({
-    text = "Player ESP",
-    callback = function(Value)
+ESPTab:AddToggle("Player ESP", {
+    Title = "Player ESP",
+    Default = false,
+    Callback = function(Value)
         PlayerESPEnabled = Value
         if not Value then
             ClearPlayerESP()
@@ -553,9 +545,10 @@ espSection:addToggle({
     end
 })
 
-espSection:addToggle({
-    text = "Team ESP",
-    callback = function(Value)
+ESPTab:AddToggle("Team ESP", {
+    Title = "Team ESP",
+    Default = false,
+    Callback = function(Value)
         TeamESPEnabled = Value
         if not Value then
             ClearTeamESP()
@@ -564,30 +557,30 @@ espSection:addToggle({
 })
 
 -- Вкладка 3: Team
-local teamMenu = window:newMenu("Team")
-local teamSection = teamMenu:newSection("Team Selection")
+TeamTab:AddSection("Team Selection")
 
-teamSection:addDropdown({
-    text = "Select Team",
-    options = {"Home", "Away"},
-    default = "Home",
-    callback = function(Option)
+TeamTab:AddDropdown("Select Team", {
+    Title = "Select Team",
+    Values = {"Home", "Away"},
+    Default = "Home",
+    Callback = function(Option)
         selectedTeam = Option
     end
 })
 
-teamSection:addDropdown({
-    text = "Select Role",
-    options = {"CF", "GK", "LW", "RW", "CM"},
-    default = "CF",
-    callback = function(Option)
+TeamTab:AddDropdown("Select Role", {
+    Title = "Select Role",
+    Values = {"CF", "LW", "RW", "CM", "GK"},
+    Default = "CF",
+    Callback = function(Option)
         selectedRole = Option
     end
 })
 
-teamSection:addToggle({
-    text = "Auto Join Home",
-    callback = function(Value)
+TeamTab:AddToggle("Auto Join Home", {
+    Title = "Auto Join Home",
+    Default = false,
+    Callback = function(Value)
         autoJoinHomeEnabled = Value
         if Value then
             while autoJoinHomeEnabled do
@@ -601,9 +594,10 @@ teamSection:addToggle({
     end
 })
 
-teamSection:addToggle({
-    text = "Auto Join Away",
-    callback = function(Value)
+TeamTab:AddToggle("Auto Join Away", {
+    Title = "Auto Join Away",
+    Default = false,
+    Callback = function(Value)
         autoJoinAwayEnabled = Value
         if Value then
             while autoJoinAwayEnabled do
@@ -618,12 +612,12 @@ teamSection:addToggle({
 })
 
 -- Вкладка 4: Modifications
-local modsMenu = window:newMenu("Modifications")
-local modsSection = modsMenu:newSection("Character Modifications")
+ModsTab:AddSection("Character Modifications")
 
-modsSection:addToggle({
-    text = "Infinite Stamina",
-    callback = function(Value)
+ModsTab:AddToggle("Infinite Stamina", {
+    Title = "Infinite Stamina",
+    Default = false,
+    Callback = function(Value)
         if player:FindFirstChild("PlayerStats") and player.PlayerStats:FindFirstChild("Stamina") then
             if Value then
                 player.PlayerStats.Stamina.Value = math.huge
@@ -638,9 +632,10 @@ modsSection:addToggle({
     end
 })
 
-modsSection:addToggle({
-    text = "No Ability Cooldown",
-    callback = function(Value)
+ModsTab:AddToggle("NoAbility Cooldown", {
+    Title = "No Ability Cooldown",
+    Default = false,
+    Callback = function(Value)
         local success, C = pcall(function()
             return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
         end)
@@ -669,35 +664,39 @@ modsSection:addToggle({
     end
 })
 
-modsSection:addToggle({
-    text = "Fly",
-    callback = function(Value)
+ModsTab:AddToggle("Fly", {
+    Title = "Fly",
+    Default = false,
+    Callback = function(Value)
         fly()
     end
 })
 
-modsSection:addSlider({
-    text = "CFrame Speed",
-    min = 1,
-    max = 500,
-    default = 1,
-    callback = function(Value)
+ModsTab:AddSlider("CFrame Speed", {
+    Title = "CFrame Speed",
+    Description = "Adjust CFrame speed",
+    Default = 1,
+    Min = 1,
+    Max = 500,
+    Rounding = 1,
+    Callback = function(Value)
         getgenv().cframespeed = Value
     end
 })
 
-modsSection:addButton({
-    text = "Reset Character",
-    callback = function()
+ModsTab:AddButton({
+    Title = "Reset Character",
+    Callback = function()
         if player.Character then
             player.Character:BreakJoints()
         end
     end
 })
 
-modsSection:addToggle({
-    text = "Anti Ragdoll",
-    callback = function(Value)
+ModsTab:AddToggle("Anti Ragdoll", {
+    Title = "Anti Ragdoll",
+    Default = false,
+    Callback = function(Value)
         antiRagdoll = Value
         if Value then
             task.spawn(function()
@@ -713,137 +712,135 @@ modsSection:addToggle({
 })
 
 -- Вкладка 5: Styles
-local stylesMenu = window:newMenu("Styles")
-local stylesSection = stylesMenu:newSection("Style Selection")
+StylesTab:AddSection("Style Selection")
 
-stylesSection:addDropdown({
-    text = "Select Style",
-    options = {"Don Lorenzo", "Shidou", "Yukimiya", "Sae", "Kunigami", "Aiku", "Rin",
-               "Karasu", "Nagi", "Reo", "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
-               "Isagi", "Chigiri"},
-    default = selectedStyle,
-    callback = function(Option)
+StylesTab:AddDropdown("Select Style", {
+    Title = "Select Style",
+    Values = {"Sae", "NEL Isagi", "Don Lorenzo", "Shidou", "Yukimiya", "Kurona", "Kunigami", "Aiku", "Rin",
+              "Karasu", "Nagi", "Reo", "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
+              "Isagi", "Chigiri"},
+    Default = selectedStyle,
+    Callback = function(Option)
         selectedStyle = Option
     end
 })
 
-stylesSection:addButton({
-    text = "Confirm Style",
-    callback = function()
+StylesTab:AddButton({
+    Title = "Confirm Style",
+    Callback = function()
         applyStyle(selectedStyle)
     end
 })
 
 -- Вкладка 6: Flow
-local flowMenu = window:newMenu("Flow")
-local flowSection = flowMenu:newSection("Flow Selection")
+FlowTab:AddSection("Flow Selection")
 
-flowSection:addDropdown({
-    text = "Select Flow",
-    options = {
+FlowTab:AddDropdown("Select Flow", {
+    Title = "Select Flow",
+    Values = {
         "Soul Harvester", "Awakened Genius", "Dribbler",
         "Prodigy", "Snake", "Crow", "Chameleon", "Trap",
         "Demon Wings", "Wild Card", "Gale Burst", "Genius",
         "Monster", "King's Instinct", "Puzzle", "Ice",
         "Lightning"
     },
-    default = selectedFlow,
-    callback = function(Option)
+    Default = selectedFlow,
+    Callback = function(Option)
         selectedFlow = Option
     end
 })
 
-flowSection:addButton({
-    text = "Confirm Flow",
-    callback = function()
+FlowTab:AddButton({
+    Title = "Confirm Flow",
+    Callback = function()
         applyFlow(selectedFlow)
     end
 })
 
 -- Вкладка 7: Cosmetics
-local cosmeticsMenu = window:newMenu("Cosmetics")
-local cosmeticsSection = cosmeticsMenu:newSection("Cosmetic Selection")
+CosmeticsTab:AddSection("Cosmetic Selection")
 
-cosmeticsSection:addDropdown({
-    text = "Select Cosmetic",
-    options = {"Feature unavailable"},
-    default = "Feature unavailable",
-    callback = function(Option)
-        print("Feature unavailable")
+CosmeticsTab:AddDropdown("Select Cosmetic", {
+    Title = "Select Cosmetic",
+    Values = {"Feature unavailable"},
+    Default = "Feature unavailable",
+    Callback = function(Option)
+                Fluent:Notify({
+                Title = "Error",
+                Content = "Feature unavailable!",
+                Duration = 3
+            })
+        end
+    end
+})
     end
 })
 
-cosmeticsSection:addButton({
-    text = "Confirm Cosmetic",
-    callback = function()
-        print("Feature unavailable")
+CosmeticsTab:AddButton({
+    Title = "Confirm Cosmetic",
+    Callback = function()
+                Fluent:Notify({
+                Title = "Error",
+                Content = "Feature unavailable!",
+                Duration = 3
+            })
+        end
+    end
+})
     end
 })
 
 -- Вкладка 8: Settings (UI Settings + Customization + Configs)
-local settingsMenu = window:newMenu("Settings")
-local settingsSection = settingsMenu:newSection("UI Controls")
+SettingsTab:AddSection("UI Controls")
 
-settingsSection:addButton({
-    text = "Destroy GUI",
-    callback = function()
-        window:destroy()
+SettingsTab:AddButton({
+    Title = "Destroy GUI",
+    Callback = function()
+        Fluent:Destroy()
     end
 })
 
-settingsSection:addButton({
-    text = "Rejoin Game",
-    callback = function()
+SettingsTab:AddButton({
+    Title = "Rejoin Game",
+    Callback = function()
         game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId)
     end
 })
 
 -- Секція для кастомізації UI
-local customizationSection = settingsMenu:newSection("UI Customization")
+SettingsTab:AddSection("UI Customization")
 
-customizationSection:addDropdown({
-    text = "Select Theme",
-    options = {"cherry", "orange", "lime", "blueberry", "grape", "dark"},
-    default = currentTheme,
-    callback = function(Option)
+SettingsTab:AddDropdown("Select Theme", {
+    Title = "Select Theme",
+    Values = {"Dark", "Light", "Aqua", "Jester"},
+    Default = currentTheme,
+    Callback = function(Option)
         currentTheme = Option
-        UI.notify({text = "Theme changed to " .. Option .. ". Restart UI to apply!", duration = 5})
-    end
-})
-
-customizationSection:addToggle({
-    text = "Enable Rounding",
-    callback = function(Value)
-        roundingEnabled = Value
-        UI.notify({text = "Rounding " .. (Value and "enabled" or "disabled") .. ". Restart UI to apply!", duration = 5})
-    end
-})
-
-customizationSection:addToggle({
-    text = "Smooth Dragging",
-    callback = function(Value)
-        smoothDraggingEnabled = Value
-        UI.notify({text = "Smooth Dragging " .. (Value and "enabled" or "disabled") .. ". Restart UI to apply!", duration = 5})
+        Fluent:Notify({
+            Title = "Theme Changed",
+            Content = "Theme changed to " .. Option .. ". Restart UI to apply!",
+            Duration = 5
+        })
     end
 })
 
 -- Секція для конфігів
-local configSection = settingsMenu:newSection("Config Management")
+SettingsTab:AddSection("Config Management")
 
 local configName = "default"
 local configs = {"default"}
 
-configSection:addTextbox({
-    text = "Config Name",
-    placeholder = "Enter config name...",
-    callback = function(text)
+SettingsTab:AddInput("Config Name", {
+    Title = "Config Name",
+    Placeholder = "Enter config name...",
+    Callback = function(text)
         configName = text
     end
 })
 
-configSection:addButton({
-    text = "Save Config",
-    callback = function()
+SettingsTab:AddButton({
+    Title = "Save Config",
+    Callback = function()
         local configData = {
             autofarmEnabled = autofarmEnabled,
             autoGoalEnabled = autoGoalEnabled,
@@ -864,9 +861,7 @@ configSection:addButton({
             cframespeed = cframespeed,
             selectedStyle = selectedStyle,
             selectedFlow = selectedFlow,
-            currentTheme = currentTheme,
-            roundingEnabled = roundingEnabled,
-            smoothDraggingEnabled = smoothDraggingEnabled
+            currentTheme = currentTheme
         }
         local success, encoded = pcall(HttpService.JSONEncode, HttpService, configData)
         if success then
@@ -874,27 +869,39 @@ configSection:addButton({
             if not table.find(configs, configName) then
                 table.insert(configs, configName)
             end
-            UI.notify({text = "Config '" .. configName .. "' saved!", duration = 5})
+            Fluent:Notify({
+                Title = "Config Saved",
+                Content = "Config '" .. configName .. "' saved!",
+                Duration = 5
+            })
         else
-            UI.notify({text = "Failed to save config!", duration = 5})
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Failed to save config!",
+                Duration = 5
+            })
         end
     end
 })
 
-configSection:addDropdown({
-    text = "Select Config",
-    options = configs,
-    default = "default",
-    callback = function(Option)
+SettingsTab:AddDropdown("SelectConfig", {
+    Title = "Select Config",
+    Values = configs,
+    Default = "default",
+    Callback = function(Option)
         configName = Option
     end
 })
 
-configSection:addButton({
-    text = "Load Config",
-    callback = function()
+SettingsTab:AddButton({
+    Title = "Load Config",
+    Callback = function()
         if not isfile("Redux_" .. configName .. ".json") then
-            UI.notify({text = "Config '" .. configName .. "' not found!", duration = 5})
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Config '" .. configName .. "' not found!",
+                Duration = 5
+            })
             return
         end
         local success, data = pcall(readfile, "Redux_" .. configName .. ".json")
@@ -920,15 +927,25 @@ configSection:addButton({
                 cframespeed = decoded.cframespeed or 1
                 selectedStyle = decoded.selectedStyle or "Default"
                 selectedFlow = decoded.selectedFlow or "Default"
-                currentTheme = decoded.currentTheme or "cherry"
-                roundingEnabled = decoded.roundingEnabled or false
-                smoothDraggingEnabled = decoded.smoothDraggingEnabled or true
-                UI.notify({text = "Config '" .. configName .. "' loaded! Restart UI to apply theme changes.", duration = 5})
+                currentTheme = decoded.currentTheme or "Dark"
+                Fluent:Notify({
+                    Title = "Config Loaded",
+                    Content = "Config '" .. configName .. "' loaded! Restart UI to apply theme changes.",
+                    Duration = 5
+                })
             else
-                UI.notify({text = "Failed to decode config!", duration = 5})
+                Fluent:Notify({
+                    Title = "Error",
+                    Content = "Failed to decode config!",
+                    Duration = 5
+                })
             end
         else
-            UI.notify({text = "Failed to load config!", duration = 5})
+            Fluent:Notify({
+                Title = "Error",
+                Content = "Failed to load config!",
+                Duration = 5
+            })
         end
     end
 })
@@ -959,5 +976,8 @@ NameLabel.BackgroundTransparency = 1
 NameLabel.TextColor3 = Color3.new(1, 1, 1)
 NameLabel.TextXAlignment = Enum.TextXAlignment.Left
 NameLabel.Parent = ScreenGui
+
+-- Відкриваємо першу вкладку за замовчуванням
+Window:SelectTab(1)
 
 print("UI loaded successfully!")
