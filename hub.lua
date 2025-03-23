@@ -445,8 +445,8 @@ local windowSettings = {
 local window = UI.newWindow(windowSettings)
 
 -- Вкладка 1: Main (Autofarm Features)
-local mainMenu = window:newMenu("Main", "rbxassetid://9651932657")
-local mainSection = mainMenu:newSection("Autofarm Features")
+local mainMenu = window:newMenu("Main") -- Прибираємо іконку
+local mainSection = mainMenu:newSection("Autofarm Features"
 
 mainSection:addToggle({
     text = "Autofarm All",
@@ -530,7 +530,7 @@ mainSection:addButton({
 })
 
 -- Вкладка 2: ESP
-local espMenu = window:newMenu("ESP", "rbxassetid://9651932657")
+local espMenu = window:newMenu("ESP")
 local espSection = espMenu:newSection("ESP Options")
 
 espSection:addToggle({
@@ -564,7 +564,7 @@ espSection:addToggle({
 })
 
 -- Вкладка 3: Team
-local teamMenu = window:newMenu("Team", "rbxassetid://9651932657")
+local teamMenu = window:newMenu("Team")
 local teamSection = teamMenu:newSection("Team Selection")
 
 teamSection:addDropdown({
@@ -618,7 +618,7 @@ teamSection:addToggle({
 })
 
 -- Вкладка 4: Modifications
-local modsMenu = window:newMenu("Modifications", "rbxassetid://9651932657")
+local modsMenu = window:newMenu("Modifications")
 local modsSection = modsMenu:newSection("Character Modifications")
 
 modsSection:addToggle({
@@ -713,7 +713,7 @@ modsSection:addToggle({
 })
 
 -- Вкладка 5: Styles
-local stylesMenu = window:newMenu("Styles", "rbxassetid://9651932657")
+local stylesMenu = window:newMenu("Styles")
 local stylesSection = stylesMenu:newSection("Style Selection")
 
 stylesSection:addDropdown({
@@ -735,7 +735,7 @@ stylesSection:addButton({
 })
 
 -- Вкладка 6: Flow
-local flowMenu = window:newMenu("Flow", "rbxassetid://9651932657")
+local flowMenu = window:newMenu("Flow")
 local flowSection = flowMenu:newSection("Flow Selection")
 
 flowSection:addDropdown({
@@ -761,7 +761,7 @@ flowSection:addButton({
 })
 
 -- Вкладка 7: Cosmetics
-local cosmeticsMenu = window:newMenu("Cosmetics", "rbxassetid://9651932657")
+local cosmeticsMenu = window:newMenu("Cosmetics")
 local cosmeticsSection = cosmeticsMenu:newSection("Cosmetic Selection")
 
 cosmeticsSection:addDropdown({
@@ -781,7 +781,7 @@ cosmeticsSection:addButton({
 })
 
 -- Вкладка 8: Settings (UI Settings + Customization + Configs)
-local settingsMenu = window:newMenu("Settings", "rbxassetid://9651932657")
+local settingsMenu = window:newMenu("Settings")
 local settingsSection = settingsMenu:newSection("UI Controls")
 
 settingsSection:addButton({
