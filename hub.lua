@@ -687,7 +687,7 @@ TeleportsTab:AddButton({
             })
             
             -- Чекаємо 2 секунди
-            task.wait(0.1)
+            task.wait(0.5)
             
             -- Повернення на початкову позицію
             rootPart.CFrame = CFrame.new(originalPosition)
@@ -722,7 +722,7 @@ TeleportsTab:AddButton({
             })
             
             -- Чекаємо 2 секунди
-            task.wait(0.1)
+            task.wait(0.5)
             
             -- Повернення на початкову позицію
             rootPart.CFrame = CFrame.new(originalPosition)
