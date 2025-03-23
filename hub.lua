@@ -679,14 +679,6 @@ TeleportsTab:AddButton({
                 Title = "Teleport",
                 Content = "Teleported to Golden Wheel!",
                 Duration = 3
-            })
-            task.wait(2)
-            rootPart.CFrame = CFrame.new(defaultCords)
-            Fluent:Notify({
-                Title = "Teleport",
-                Content = "Returned to default position!",
-                Duration = 3
-            })
         else
             Fluent:Notify({
                 Title = "Error",
@@ -705,13 +697,6 @@ TeleportsTab:AddButton({
             Fluent:Notify({
                 Title = "Teleport",
                 Content = "Teleported to Valentines Quests!",
-                Duration = 3
-            })
-            task.wait(2)
-            rootPart.CFrame = CFrame.new(defaultCords)
-            Fluent:Notify({
-                Title = "Teleport",
-                Content = "Returned to default position!",
                 Duration = 3
             })
         else
