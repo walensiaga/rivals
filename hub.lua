@@ -13,6 +13,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
+-- Встановлюємо всі функції вимкненими за замовчуванням
 local FootballESPEnabled = false
 local Lines = {}
 local Quads = {}
@@ -41,6 +42,7 @@ local PlayerESPEnabled = false
 local TeamESPEnabled = false
 local antiRagdoll = false
 local cframespeed = 1
+local flyEnabled = false -- Додаємо змінну для польоту
 local playerEspObjects = {}
 local teamEspObjects = {}
 local enemyEspObjects = {}
@@ -145,10 +147,11 @@ local function DrawFootballESP(Football)
 end
 
 local function FootballESP()
+    if not FootballESPEnabled then return end -- Виконуємо лише якщо увімкнено
     ClearESP()
 
     local Football = Workspace:FindFirstChild("Football")
-    if Football and Football:IsA("BasePart") and FootballESPEnabled then
+    if Football and Football:IsA("BasePart") then
         DrawFootballESP(Football)
     end
 end
@@ -304,6 +307,8 @@ local function autoBring()
 end
 
 local function fly()
+    if not flyEnabled then return end -- Виконуємо лише якщо увімкнено
+
     local flying = false
     local flySpeed = 100
     local maxFlySpeed = 1000
@@ -324,7 +329,7 @@ local function fly()
         flying = true
         workspace.Gravity = 0
         task.spawn(function()
-            while flying do
+            while flying and flyEnabled do
                 local MoveDirection = Vector3.new()
                 local cameraCFrame = workspace.CurrentCamera.CFrame
 
@@ -345,6 +350,9 @@ local function fly()
 
                 RunService.RenderStepped:Wait()
             end
+            -- Відновлюємо гравітацію, коли політ вимкнено
+            workspace.Gravity = originalGravity
+            rootPart.Velocity = Vector3.new(0, 0, 0)
         end)
     else
         flying = false
@@ -397,7 +405,16 @@ local function applyFlow(flow)
     end
 end
 
-RunService.RenderStepped:Connect(FootballESP)
+-- Підключаємо FootballESP лише коли увімкнено
+local espConnection
+local function StartFootballESP()
+    if espConnection then
+        espConnection:Disconnect()
+    end
+    if FootballESPEnabled then
+        espConnection = RunService.RenderStepped:Connect(FootballESP)
+    end
+end
 
 -- Завантажуємо Fluent UI
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
@@ -414,18 +431,18 @@ local Window = Fluent:CreateWindow({
     Size = UDim2.fromOffset(600, 500),
     Theme = currentTheme,
     Acrylic = true,
-    MinimizeKey = Enum.KeyCode.LeftControl
+    MinimizeKey = Enum.KeyCode.RightShift
 })
 
--- Створюємо вкладки
-local MainTab = Window:AddTab({ Title = "Main", Icon = "" })
-local ESPTab = Window:AddTab({ Title = "ESP", Icon = "" })
-local TeamTab = Window:AddTab({ Title = "Team", Icon = "" })
-local ModsTab = Window:AddTab({ Title = "Modifications", Icon = "" })
-local StylesTab = Window:AddTab({ Title = "Styles", Icon = "" })
-local FlowTab = Window:AddTab({ Title = "Flow", Icon = "" })
-local CosmeticsTab = Window:AddTab({ Title = "Cosmetics", Icon = "" })
-local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "" })
+-- Створюємо вкладки з іконками
+local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
+local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
+local TeamTab = Window:AddTab({ Title = "Team", Icon = "users" })
+local ModsTab = Window:AddTab({ Title = "Modifications", Icon = "wrench" })
+local StylesTab = Window:AddTab({ Title = "Styles", Icon = "palette" })
+local FlowTab = Window:AddTab({ Title = "Flow", Icon = "zap" })
+local CosmeticsTab = Window:AddTab({ Title = "Cosmetics", Icon = "gift" })
+local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
 -- Вкладка 1: Main (Autofarm Features)
 MainTab:AddSection("Autofarm Features")
@@ -526,6 +543,7 @@ ESPTab:AddToggle("FootballESP", {
     Default = false,
     Callback = function(Value)
         FootballESPEnabled = Value
+        StartFootballESP() -- Запускаємо або зупиняємо ESP
         if not Value then
             ClearESP()
         end
@@ -666,7 +684,8 @@ ModsTab:AddToggle("Fly", {
     Title = "Fly",
     Default = false,
     Callback = function(Value)
-        fly()
+        flyEnabled = Value
+        fly() -- Викликаємо функцію польоту
     end
 })
 
