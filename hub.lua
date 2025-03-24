@@ -52,6 +52,9 @@ local aimRadius = 5
 local wheelCords = Vector3.new(117.8, -443.9, -258.9)
 local valentineCords = Vector3.new(-23.66, -493.26, -129.15)
 local defaultCords = Vector3.new(5.9, 11.2, -40.8)
+local MAX_INTERCEPT_DISTANCE = 10 -- Дистанція для початку перехоплення
+local BLOCK_DISTANCE = 3 -- Дистанція для стрибка
+local PREDICTION_TIME = 0.5 -- Час передбачення
 
 -- Змінні для кастомізації UI
 local currentTheme = "Dark" -- Fluent UI підтримує свої теми
@@ -370,29 +373,77 @@ local function autoTPBall()
     end
 end
 
-local function isBallMovingTowardsGK(ball)
+local function isBallMovingTowardsGK(ball, goalPosition)
     local ballVelocity = ball.AssemblyLinearVelocity
-    local ballToGK = (rootPart.Position - ball.Position).Unit
-    local dotProduct = ballVelocity.Unit:Dot(ballToGK)
-    
-    return dotProduct > 0
+    local ballToGoal = (goalPosition - ball.Position).Unit
+    local dotProduct = ballVelocity.Unit:Dot(ballToGoal)
+    return dotProduct > 0 and ballVelocity.Magnitude > 5
 end
 
+local function predictBallPosition(ball)
+    local ballVelocity = ball.AssemblyLinearVelocity
+    return ball.Position + ballVelocity * PREDICTION_TIME
+end
+
+-- Визначення напрямку м’яча відносно воротаря
+local function getBallDirection(ball, goalkeeperRoot)
+    local ballVelocity = ball.AssemblyLinearVelocity
+    local rightVector = goalkeeperRoot.CFrame.RightVector -- Правий напрямок воротаря
+    local ballDir = ballVelocity.Unit
+    local dotRight = rightVector:Dot(ballDir)
+    
+    if dotRight > 0.5 then
+        return "right" -- М’яч рухається вправо
+    elseif dotRight < -0.5 then
+        return "left" -- М’яч рухається вліво
+    else
+        return "forward" -- М’яч летить прямо на воротаря
+    end
+end
+
+local function jumpInDirection(direction, ball)
+    if direction == "right" then
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, -math.pi/2, 0) -- Поворот вправо
+    elseif direction == "left" then
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.pi/2, 0) -- Поворот вліво
+    elseif direction == "forward" then
+        aimAtBall(ball) -- Націлювання на м’яч, якщо прямо
+    end
+    
+    UserInputService:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
+    task.wait(0.1)
+    UserInputService:SendKeyEvent(false, Enum.KeyCode.Q, false, nil)
+end
+
+-- Оновлена функція autoGoalKeeper
 local function autoGoalKeeper()
     while autoGoalKeeperEnabled do
         local ball = workspace:FindFirstChild("Football")
-        if ball and ball:IsA("BasePart") then
-            if isBallMovingTowardsGK(ball) then
-                local distance = (ball.Position - rootPart.Position).Magnitude
-                aimAtBall(ball)
-                if distance <= MAX_DISTANCE then
-                    UserInputService:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
-                    task.wait(0.1)
-                    UserInputService:SendKeyEvent(false, Enum.KeyCode.Q, false, nil)
+        if not ball or not ball:IsA("BasePart") or not player.Team then
+            task.wait()
+            continue
+        end
+
+        -- Визначаємо позицію воріт залежно від команди
+        local goalPosition = player.Team.Name == "Home" and homeGoalPosition or awayGoalPosition
+
+        if isBallMovingTowardsGK(ball, goalPosition) then
+            local predictedPos = predictBallPosition(ball)
+            local distanceToBall = (predictedPos - rootPart.Position).Magnitude
+
+            if distanceToBall <= MAX_INTERCEPT_DISTANCE then
+                -- Рухаємося до точки перехоплення
+                local direction = (predictedPos - rootPart.Position).Unit
+                rootPart.CFrame = CFrame.new(rootPart.Position + direction * 2) * CFrame.lookAt(rootPart.Position, predictedPos)
+
+                -- Якщо м’яч у зоні стрибка, визначаємо напрямок і стрибаємо
+                if distanceToBall <= BLOCK_DISTANCE then
+                    local ballDirection = getBallDirection(ball, rootPart)
+                    jumpInDirection(ballDirection, ball)
                 end
             end
         end
-        task.wait()
+        task.wait(0.05)
     end
 end
 
@@ -614,15 +665,39 @@ MainTab:AddToggle("AutoGoalKeeper", {
     end
 })
 
-MainTab:AddSlider("GoalKeeperPredictionDistance", {
-    Title = "Goal Keeper Prediction Distance",
-    Description = "Adjust prediction distance for goalkeeper",
-    Default = 1,
-    Min = 0,
+MainTab:AddSlider("InterceptDistance", {
+    Title = "Intercept Distance",
+    Description = "Distance to start intercepting the ball",
+    Default = 10,
+    Min = 5,
+    Max = 20,
+    Rounding = 1,
+    Callback = function(Value)
+        MAX_INTERCEPT_DISTANCE = Value
+    end
+})
+
+MainTab:AddSlider("BlockDistance", {
+    Title = "Defend Distance",
+    Description = "Distance to jump towards the ball",
+    Default = 3,
+    Min = 1,
     Max = 10,
     Rounding = 1,
     Callback = function(Value)
-        predictionDistance = Value
+        BLOCK_DISTANCE = Value
+    end
+})
+
+MainTab:AddSlider("PredictionTime", {
+    Title = "Prediction Time",
+    Description = "Time to predict ball position (seconds)",
+    Default = 0.5,
+    Min = 0.1,
+    Max = 1,
+    Rounding = 1,
+    Callback = function(Value)
+        PREDICTION_TIME = Value
     end
 })
 
