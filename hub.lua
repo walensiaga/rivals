@@ -13,7 +13,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 local Camera = Workspace.CurrentCamera
 
--- Встановлюємо всі функції вимкненими за замовчуванням
+-- Змінні за замовчуванням
 local FootballESPEnabled = false
 local Lines = {}
 local Quads = {}
@@ -42,7 +42,7 @@ local PlayerESPEnabled = false
 local TeamESPEnabled = false
 local antiRagdoll = false
 local cframespeed = 1
-local flyEnabled = false -- Додаємо змінну для польоту
+local flyEnabled = false
 local playerEspObjects = {}
 local teamEspObjects = {}
 local enemyEspObjects = {}
@@ -52,14 +52,26 @@ local aimRadius = 5
 local wheelCords = Vector3.new(117.8, -443.9, -258.9)
 local valentineCords = Vector3.new(-23.66, -493.26, -129.15)
 local defaultCords = Vector3.new(5.9, 11.2, -40.8)
-local MAX_INTERCEPT_DISTANCE = 10 -- Дистанція для початку перехоплення
-local BLOCK_DISTANCE = 3 -- Дистанція для стрибка
-local PREDICTION_TIME = 0.5 -- Час передбачення
-
--- Змінні для кастомізації UI
-local currentTheme = "Dark" -- Fluent UI підтримує свої теми
+local MAX_INTERCEPT_DISTANCE = 10
+local BLOCK_DISTANCE = 3
+local PREDICTION_TIME = 0.5
+local currentTheme = "Dark"
 local roundingEnabled = false
 local smoothDraggingEnabled = true
+
+-- Функція приєднання до обраної команди
+local function joinSelectedTeam()
+    if player.Team and player.Team.Name == "Visitor" then
+        if autoJoinHomeEnabled then
+            selectedTeam = "Home"
+        elseif autoJoinAwayEnabled then
+            selectedTeam = "Away"
+        end
+        local args = {selectedTeam, selectedRole}
+        game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
+        task.wait(1) -- Затримка для приєднання
+    end
+end
 
 -- Функції для ESP
 local function ClearESP()
@@ -155,7 +167,98 @@ local function DrawFootballESP(Football)
     DrawQuad(Corners[2], Corners[4], Corners[8], Corners[6])
 end
 
--- Функція для малювання круга на екрані
+local function FootballESP()
+    if not FootballESPEnabled then return end
+    ClearESP()
+
+    local Football = Workspace:FindFirstChild("Football")
+    if Football and Football:IsA("BasePart") then
+        DrawFootballESP(Football)
+    end
+end
+
+local function DrawPlayerESP(otherPlayer)
+    if not PlayerESPEnabled then return end
+    local char = otherPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local root = char.HumanoidRootPart
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+    if not onScreen then return end
+
+    local esp = Drawing.new("Text")
+    esp.Text = otherPlayer.Name
+    esp.Size = 16
+    esp.Center = true
+    esp.Position = Vector2.new(screenPos.X, screenPos.Y - 30)
+    esp.Color = Color3.fromRGB(255, 255, 255)
+    esp.Outline = true
+    esp.Visible = true
+
+    playerEspObjects[otherPlayer] = {esp = esp}
+end
+
+local function DrawTeamESP(otherPlayer)
+    if not TeamESPEnabled or otherPlayer.Team ~= player.Team then return end
+    local char = otherPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+
+    local root = char.HumanoidRootPart
+    local head = char:FindFirstChild("Head")
+    if not head then return end
+
+    local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
+    if not onScreen then return end
+
+    local esp = Drawing.new("Text")
+    esp.Text = otherPlayer.Name .. " [" .. (otherPlayer:FindFirstChild("PlayerStats") and otherPlayer.PlayerStats.Role.Value or "N/A") .. "]"
+    esp.Size = 16
+    esp.Center = true
+    esp.Position = Vector2.new(screenPos.X, screenPos.Y - 30)
+    esp.Color = Color3.fromRGB(0, 255, 0)
+    esp.Outline = true
+    esp.Visible = true
+
+    teamEspObjects[otherPlayer] = {esp = esp}
+end
+
+local function UpdateESP()
+    if PlayerESPEnabled then
+        ClearPlayerESP()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player then
+                DrawPlayerESP(p)
+            end
+        end
+    end
+
+    if TeamESPEnabled then
+        ClearTeamESP()
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= player then
+                DrawTeamESP(p)
+            end
+        end
+    end
+end
+
+local function ClearPlayerESP()
+    for _, objects in pairs(playerEspObjects) do
+        if objects.esp then objects.esp:Remove() end
+    end
+    playerEspObjects = {}
+end
+
+local function ClearTeamESP()
+    for _, objects in pairs(teamEspObjects) do
+        if objects.esp then objects.esp:Remove() end
+    end
+    teamEspObjects = {}
+end
+
 local function drawAimCircle(targetPosition)
     if aimCircle then
         aimCircle:Remove()
@@ -177,7 +280,6 @@ local function drawAimCircle(targetPosition)
     aimCircle.Visible = true
 end
 
--- Очищення круга
 local function clearAimCircle()
     if aimCircle then
         aimCircle:Remove()
@@ -185,13 +287,10 @@ local function clearAimCircle()
     end
 end
 
--- Оновлена функція для пошуку безпечної позиції з урахуванням команд
 local function findSafeGoalPosition(team)
-    -- Визначаємо цільові ворота залежно від команди
     local goalPosition = team.Name == "Home" and awayGoalPosition or homeGoalPosition
     local goalkeeper = nil
     
-    -- Пошук голкіпера ворожої команди
     for _, otherPlayer in ipairs(Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Team ~= player.Team then
             local role = otherPlayer:FindFirstChild("PlayerStats") and otherPlayer.PlayerStats:FindFirstChild("Role")
@@ -202,7 +301,6 @@ local function findSafeGoalPosition(team)
         end
     end
 
-    -- Генерація випадкової точки в межах радіусу
     local randomAngle = math.random() * 2 * math.pi
     local randomRadius = math.random() * aimRadius
     local offsetX = math.cos(randomAngle) * randomRadius
@@ -210,7 +308,6 @@ local function findSafeGoalPosition(team)
     
     local targetPosition = goalPosition + Vector3.new(offsetX, 0, offsetZ)
     
-    -- Перевірка, чи позиція поза досяжністю голкіпера
     if goalkeeper then
         local distanceToGK = (targetPosition - goalkeeper.Position).Magnitude
         if distanceToGK < 10 then
@@ -221,9 +318,9 @@ local function findSafeGoalPosition(team)
     return targetPosition
 end
 
--- Функція для silent aimgoal
 local function silentAimGoal()
     while silentAimGoalEnabled do
+        joinSelectedTeam()
         if not checkTeam() or not hasBall() then
             task.wait()
             continue
@@ -232,13 +329,10 @@ local function silentAimGoal()
         local team = player.Team
         local targetPosition = findSafeGoalPosition(team)
         
-        -- Напрямок удару
         local direction = (targetPosition - rootPart.Position).Unit
         
-        -- Виконання удару
         ballServiceRemote:FireServer(1, nil, nil, direction)
         
-        -- Блокування взаємодії з м'ячем на 3.5 секунди
         local ball = workspace:FindFirstChild("Football")
         if ball then
             ball.CanCollide = false
@@ -246,66 +340,8 @@ local function silentAimGoal()
             ball.CanCollide = true
         end
         
-        task.wait(0.1) -- Затримка перед наступним ударом
+        task.wait(0.1)
     end
-end
-
-local function FootballESP()
-    if not FootballESPEnabled then return end -- Виконуємо лише якщо увімкнено
-    ClearESP()
-
-    local Football = Workspace:FindFirstChild("Football")
-    if Football and Football:IsA("BasePart") then
-        DrawFootballESP(Football)
-    end
-end
-
-local function ClearTracer()
-    if tracer then
-        tracer:Remove()
-        tracer = nil
-    end
-end
-
-local function ClearDistance()
-    if distanceText then
-        distanceText:Remove()
-        distanceText = nil
-    end
-end
-
-local function ClearFootballChams()
-    if highlight then
-        highlight:Destroy()
-        highlight = nil
-    end
-end
-
-local function ClearTeamESP()
-    for _, objects in pairs(teamEspObjects or {}) do
-        if objects.esp then objects.esp:Remove() end
-        if objects.highlight then objects.highlight:Destroy() end
-        if objects.nameTag then objects.nameTag:Remove() end
-    end
-    teamEspObjects = {}
-end
-
-local function ClearEnemyESP()
-    for _, objects in pairs(enemyEspObjects or {}) do
-        if objects.esp then objects.esp:Remove() end
-        if objects.highlight then objects.highlight:Destroy() end
-        if objects.nameTag then objects.nameTag:Remove() end
-    end
-    enemyEspObjects = {}
-end
-
-local function ClearPlayerESP()
-    for _, objects in pairs(playerEspObjects or {}) do
-        if objects.esp then objects.esp:Remove() end
-        if objects.highlight then objects.highlight:Destroy() end
-        if objects.nameTag then objects.nameTag:Remove() end
-    end
-    playerEspObjects = {}
 end
 
 -- Функції для гри
@@ -320,6 +356,7 @@ end
 
 local function autoGoal()
     while autoGoalEnabled do
+        joinSelectedTeam()
         if not checkTeam() or not hasBall() then
             task.wait()
             continue
@@ -338,6 +375,7 @@ end
 
 local function autoSteal()
     while autoStealEnabled do
+        joinSelectedTeam()
         local targetPlayer, closestDistance = nil, math.huge
         
         for _, otherPlayer in ipairs(Players:GetPlayers()) do
@@ -365,6 +403,7 @@ end
 local function autoTPBall()
     local ball
     while autoTPBallEnabled do
+        joinSelectedTeam()
         ball = workspace:FindFirstChild("Football")
         if ball then
             rootPart:PivotTo(ball:GetPivot())
@@ -385,29 +424,28 @@ local function predictBallPosition(ball)
     return ball.Position + ballVelocity * PREDICTION_TIME
 end
 
--- Визначення напрямку м’яча відносно воротаря
 local function getBallDirection(ball, goalkeeperRoot)
     local ballVelocity = ball.AssemblyLinearVelocity
-    local rightVector = goalkeeperRoot.CFrame.RightVector -- Правий напрямок воротаря
+    local rightVector = goalkeeperRoot.CFrame.RightVector
     local ballDir = ballVelocity.Unit
     local dotRight = rightVector:Dot(ballDir)
     
     if dotRight > 0.5 then
-        return "right" -- М’яч рухається вправо
+        return "right"
     elseif dotRight < -0.5 then
-        return "left" -- М’яч рухається вліво
+        return "left"
     else
-        return "forward" -- М’яч летить прямо на воротаря
+        return "forward"
     end
 end
 
 local function jumpInDirection(direction, ball)
     if direction == "right" then
-        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, -math.pi/2, 0) -- Поворот вправо
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, -math.pi/2, 0)
     elseif direction == "left" then
-        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.pi/2, 0) -- Поворот вліво
+        rootPart.CFrame = rootPart.CFrame * CFrame.Angles(0, math.pi/2, 0)
     elseif direction == "forward" then
-        aimAtBall(ball) -- Націлювання на м’яч, якщо прямо
+        aimAtBall(ball)
     end
     
     UserInputService:SendKeyEvent(true, Enum.KeyCode.Q, false, nil)
@@ -415,16 +453,15 @@ local function jumpInDirection(direction, ball)
     UserInputService:SendKeyEvent(false, Enum.KeyCode.Q, false, nil)
 end
 
--- Оновлена функція autoGoalKeeper
 local function autoGoalKeeper()
     while autoGoalKeeperEnabled do
+        joinSelectedTeam()
         local ball = workspace:FindFirstChild("Football")
         if not ball or not ball:IsA("BasePart") or not player.Team then
             task.wait()
             continue
         end
 
-        -- Визначаємо позицію воріт залежно від команди
         local goalPosition = player.Team.Name == "Home" and homeGoalPosition or awayGoalPosition
 
         if isBallMovingTowardsGK(ball, goalPosition) then
@@ -432,11 +469,9 @@ local function autoGoalKeeper()
             local distanceToBall = (predictedPos - rootPart.Position).Magnitude
 
             if distanceToBall <= MAX_INTERCEPT_DISTANCE then
-                -- Рухаємося до точки перехоплення
                 local direction = (predictedPos - rootPart.Position).Unit
                 rootPart.CFrame = CFrame.new(rootPart.Position + direction * 2) * CFrame.lookAt(rootPart.Position, predictedPos)
 
-                -- Якщо м’яч у зоні стрибка, визначаємо напрямок і стрибаємо
                 if distanceToBall <= BLOCK_DISTANCE then
                     local ballDirection = getBallDirection(ball, rootPart)
                     jumpInDirection(ballDirection, ball)
@@ -449,6 +484,7 @@ end
 
 local function autoBring()
     while autoBringEnabled do
+        joinSelectedTeam()
         local ball = workspace:FindFirstChild("Football")
         if ball then
             local args = {[1] = ball}
@@ -459,7 +495,7 @@ local function autoBring()
 end
 
 local function fly()
-    if not flyEnabled then return end -- Виконуємо лише якщо увімкнено
+    if not flyEnabled then return end
 
     local flying = false
     local flySpeed = 100
@@ -502,7 +538,6 @@ local function fly()
 
                 RunService.RenderStepped:Wait()
             end
-            -- Відновлюємо гравітацію, коли політ вимкнено
             workspace.Gravity = originalGravity
             rootPart.Velocity = Vector3.new(0, 0, 0)
         end)
@@ -541,7 +576,6 @@ local function aimAtBall(ball)
     rootPart.CFrame = CFrame.new(rootPart.Position) * CFrame.Angles(0, y, 0)
 end
 
--- Функції для стилів і Flow
 local selectedStyle = player.PlayerStats and player.PlayerStats.Style and player.PlayerStats.Style.Value or "Default"
 local selectedFlow = player.PlayerStats and player.PlayerStats.Flow and player.PlayerStats.Flow.Value or "Default"
 
@@ -557,7 +591,6 @@ local function applyFlow(flow)
     end
 end
 
--- Підключаємо FootballESP лише коли увімкнено
 local espConnection
 local function StartFootballESP()
     if espConnection then
@@ -568,14 +601,23 @@ local function StartFootballESP()
     end
 end
 
--- Завантажуємо Fluent UI
+local playerEspConnection
+local function StartPlayerESP()
+    if playerEspConnection then
+        playerEspConnection:Disconnect()
+    end
+    if PlayerESPEnabled or TeamESPEnabled then
+        playerEspConnection = RunService.RenderStepped:Connect(UpdateESP)
+    end
+end
+
+-- Завантаження Fluent UI
 local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
 if not Fluent then
     warn("Failed to load UI Library")
     return
 end
 
--- Створюємо вікно
 local Window = Fluent:CreateWindow({
     Title = "Redux Hub",
     SubTitle = "by qzwtrp",
@@ -586,7 +628,6 @@ local Window = Fluent:CreateWindow({
     MinimizeKey = Enum.KeyCode.RightShift
 })
 
--- Створюємо вкладки з іконками
 local MainTab = Window:AddTab({ Title = "Main", Icon = "home" })
 local TeleportsTab = Window:AddTab({ Title = "Teleports", Icon = "plane" })
 local ESPTab = Window:AddTab({ Title = "ESP", Icon = "eye" })
@@ -597,7 +638,7 @@ local FlowTab = Window:AddTab({ Title = "Flow", Icon = "grape" })
 local CosmeticsTab = Window:AddTab({ Title = "Cosmetics", Icon = "gift" })
 local SettingsTab = Window:AddTab({ Title = "Settings", Icon = "settings" })
 
--- Вкладка 1: Main (Autofarm Features)
+-- Main Tab
 MainTab:AddSection("Autofarm Features")
 
 MainTab:AddToggle("AutofarmAll", {
@@ -612,6 +653,7 @@ MainTab:AddToggle("AutofarmAll", {
         autoGoalKeeperEnabled = Value
         
         if Value then
+            joinSelectedTeam()
             task.spawn(autoGoal)
             task.spawn(autoSteal)
             task.spawn(autoTPBall)
@@ -712,7 +754,6 @@ MainTab:AddButton({
     end
 })
 
--- Оновлений перемикач у MainTab
 MainTab:AddToggle("SilentAimGoal", {
     Title = "Silent Aim Goal",
     Default = false,
@@ -743,40 +784,21 @@ MainTab:AddSlider("AimRadius", {
     end
 })
 
--- Секція Teleports
+-- Teleports Tab
 TeleportsTab:AddSection("Teleport Options")
 
 TeleportsTab:AddButton({
     Title = "Golden Wheel TP",
     Callback = function()
         if player.Character and rootPart then
-            -- Зберігаємо поточну позицію
             local originalPosition = rootPart.Position
-            
-            -- Телепорт до Golden Wheel
             rootPart.CFrame = CFrame.new(wheelCords)
-            Fluent:Notify({
-                Title = "Teleport",
-                Content = "Teleported to Golden Wheel!",
-                Duration = 3
-            })
-            
-            -- Чекаємо 2 секунди
-             task.wait(0.0000001)
-            
-            -- Повернення на початкову позицію
+            Fluent:Notify({Title = "Teleport", Content = "Teleported to Golden Wheel!", Duration = 3})
+            task.wait(0.0000001)
             rootPart.CFrame = CFrame.new(originalPosition)
-            Fluent:Notify({
-                Title = "Teleport",
-                Content = "Returned to original position!",
-                Duration = 3
-            })
+            Fluent:Notify({Title = "Teleport", Content = "Returned to original position!", Duration = 3})
         else
-            Fluent:Notify({
-                Title = "Error",
-                Content = "Character or root part not found!",
-                Duration = 3
-            })
+            Fluent:Notify({Title = "Error", Content = "Character or root part not found!", Duration = 3})
         end
     end
 })
@@ -785,38 +807,19 @@ TeleportsTab:AddButton({
     Title = "Valentines Quests TP",
     Callback = function()
         if player.Character and rootPart then
-            -- Зберігаємо поточну позицію
             local originalPosition = rootPart.Position
-            
-            -- Телепорт до Valentines Quests
             rootPart.CFrame = CFrame.new(valentineCords)
-            Fluent:Notify({
-                Title = "Teleport",
-                Content = "Teleported to Valentines Quests!",
-                Duration = 3
-            })
-            
-            -- Чекаємо 2 секунди
-             task.wait(0.0000001)
-            
-            -- Повернення на початкову позицію
+            Fluent:Notify({Title = "Teleport", Content = "Teleported to Valentines Quests!", Duration = 3})
+            task.wait(0.0000001)
             rootPart.CFrame = CFrame.new(originalPosition)
-            Fluent:Notify({
-                Title = "Teleport",
-                Content = "Returned to original position!",
-                Duration = 3
-            })
+            Fluent:Notify({Title = "Teleport", Content = "Returned to original position!", Duration = 3})
         else
-            Fluent:Notify({
-                Title = "Error",
-                Content = "Character or root part not found!",
-                Duration = 3
-            })
+            Fluent:Notify({Title = "Error", Content = "Character or root part not found!", Duration = 3})
         end
     end
 })
 
--- Вкладка 2: ESP
+-- ESP Tab
 ESPTab:AddSection("ESP Options")
 
 ESPTab:AddToggle("FootballESP", {
@@ -824,7 +827,7 @@ ESPTab:AddToggle("FootballESP", {
     Default = false,
     Callback = function(Value)
         FootballESPEnabled = Value
-        StartFootballESP() -- Запускаємо або зупиняємо ESP
+        StartFootballESP()
         if not Value then
             ClearESP()
         end
@@ -836,6 +839,7 @@ ESPTab:AddToggle("PlayerESP", {
     Default = false,
     Callback = function(Value)
         PlayerESPEnabled = Value
+        StartPlayerESP()
         if not Value then
             ClearPlayerESP()
         end
@@ -847,13 +851,14 @@ ESPTab:AddToggle("TeamESP", {
     Default = false,
     Callback = function(Value)
         TeamESPEnabled = Value
+        StartPlayerESP()
         if not Value then
             ClearTeamESP()
         end
     end
 })
 
--- Вкладка 3: Team
+-- Team Tab
 TeamTab:AddSection("Team Selection")
 
 TeamTab:AddDropdown("SelectTeam", {
@@ -879,6 +884,7 @@ TeamTab:AddToggle("AutoJoinHome", {
     Default = false,
     Callback = function(Value)
         autoJoinHomeEnabled = Value
+        autoJoinAwayEnabled = false -- Вимикаємо протилежну команду
         if Value then
             while autoJoinHomeEnabled do
                 if player.Team and player.Team.Name == "Visitor" then
@@ -896,6 +902,7 @@ TeamTab:AddToggle("AutoJoinAway", {
     Default = false,
     Callback = function(Value)
         autoJoinAwayEnabled = Value
+        autoJoinHomeEnabled = false -- Вимикаємо протилежну команду
         if Value then
             while autoJoinAwayEnabled do
                 if player.Team and player.Team.Name == "Visitor" then
@@ -908,7 +915,7 @@ TeamTab:AddToggle("AutoJoinAway", {
     end
 })
 
--- Вкладка 4: Modifications
+-- Modifications Tab
 ModsTab:AddSection("Character Modifications")
 
 ModsTab:AddToggle("InfiniteStamina", {
@@ -966,7 +973,7 @@ ModsTab:AddToggle("Fly", {
     Default = false,
     Callback = function(Value)
         flyEnabled = Value
-        fly() -- Викликаємо функцію польоту
+        fly()
     end
 })
 
@@ -1009,7 +1016,7 @@ ModsTab:AddToggle("AntiRagdoll", {
     end
 })
 
--- Вкладка 5: Styles
+-- Styles Tab
 StylesTab:AddSection("Style Selection")
 
 StylesTab:AddDropdown("SelectStyle", {
@@ -1030,7 +1037,7 @@ StylesTab:AddButton({
     end
 })
 
--- Вкладка 6: Flow
+-- Flow Tab
 FlowTab:AddSection("Flow Selection")
 
 FlowTab:AddDropdown("SelectFlow", {
@@ -1055,7 +1062,7 @@ FlowTab:AddButton({
     end
 })
 
--- Вкладка 7: Cosmetics
+-- Cosmetics Tab
 CosmeticsTab:AddSection("Cosmetic Selection")
 
 CosmeticsTab:AddDropdown("SelectCosmetic", {
@@ -1063,26 +1070,18 @@ CosmeticsTab:AddDropdown("SelectCosmetic", {
     Values = {"Feature unavailable"},
     Default = "Feature unavailable",
     Callback = function(Option)
-        Fluent:Notify({
-            Title = "Error",
-            Content = "Feature unavailable!",
-            Duration = 3
-        })
+        Fluent:Notify({Title = "Error", Content = "Feature unavailable!", Duration = 3})
     end
 })
 
 CosmeticsTab:AddButton({
     Title = "Confirm Cosmetic",
     Callback = function()
-        Fluent:Notify({
-            Title = "Error",
-            Content = "Feature unavailable!",
-            Duration = 3
-        })
+        Fluent:Notify({Title = "Error", Content = "Feature unavailable!", Duration = 3})
     end
 })
 
--- Вкладка 8: Settings (UI Settings + Customization + Configs)
+-- Settings Tab
 SettingsTab:AddSection("UI Controls")
 
 SettingsTab:AddButton({
@@ -1099,7 +1098,6 @@ SettingsTab:AddButton({
     end
 })
 
--- Секція для кастомізації UI
 SettingsTab:AddSection("UI Customization")
 
 SettingsTab:AddDropdown("SelectTheme", {
@@ -1108,15 +1106,10 @@ SettingsTab:AddDropdown("SelectTheme", {
     Default = currentTheme,
     Callback = function(Option)
         currentTheme = Option
-        Fluent:Notify({
-            Title = "Theme Changed",
-            Content = "Theme changed to " .. Option .. ". Restart UI to apply!",
-            Duration = 5
-        })
+        Fluent:Notify({Title = "Theme Changed", Content = "Theme changed to " .. Option .. ". Restart UI to apply!", Duration = 5})
     end
 })
 
--- Секція для конфігів
 SettingsTab:AddSection("Config Management")
 
 local configName = "default"
@@ -1161,17 +1154,9 @@ SettingsTab:AddButton({
             if not table.find(configs, configName) then
                 table.insert(configs, configName)
             end
-            Fluent:Notify({
-                Title = "Config Saved",
-                Content = "Config '" .. configName .. "' saved!",
-                Duration = 5
-            })
+            Fluent:Notify({Title = "Config Saved", Content = "Config '" .. configName .. "' saved!", Duration = 5})
         else
-            Fluent:Notify({
-                Title = "Error",
-                Content = "Failed to save config!",
-                Duration = 5
-            })
+            Fluent:Notify({Title = "Error", Content = "Failed to save config!", Duration = 5})
         end
     end
 })
@@ -1189,11 +1174,7 @@ SettingsTab:AddButton({
     Title = "Load Config",
     Callback = function()
         if not isfile("Redux_" .. configName .. ".json") then
-            Fluent:Notify({
-                Title = "Error",
-                Content = "Config '" .. configName .. "' not found!",
-                Duration = 5
-            })
+            Fluent:Notify({Title = "Error", Content = "Config '" .. configName .. "' not found!", Duration = 5})
             return
         end
         local success, data = pcall(readfile, "Redux_" .. configName .. ".json")
@@ -1220,29 +1201,15 @@ SettingsTab:AddButton({
                 selectedStyle = decoded.selectedStyle or "Default"
                 selectedFlow = decoded.selectedFlow or "Default"
                 currentTheme = decoded.currentTheme or "Dark"
-                Fluent:Notify({
-                    Title = "Config Loaded",
-                    Content = "Config '" .. configName .. "' loaded! Restart UI to apply theme changes.",
-                    Duration = 5
-                })
+                Fluent:Notify({Title = "Config Loaded", Content = "Config '" .. configName .. "' loaded! Restart UI to apply theme changes.", Duration = 5})
             else
-                Fluent:Notify({
-                    Title = "Error",
-                    Content = "Failed to decode config!",
-                    Duration = 5
-                })
+                Fluent:Notify({Title = "Error", Content = "Failed to decode config!", Duration = 5})
             end
         else
-            Fluent:Notify({
-                Title = "Error",
-                Content = "Failed to load config!",
-                Duration = 5
-            })
+            Fluent:Notify({Title = "Error", Content = "Failed to load config!", Duration = 5})
         end
     end
 })
 
--- Відкриваємо першу вкладку за замовчуванням
 Window:SelectTab(1)
-
 print("UI loaded successfully!")
