@@ -59,7 +59,7 @@ local roundingEnabled = false
 local smoothDraggingEnabled = true
 
 local function autoJoinTeam()
-    while autoJoinEnabled and task.wait(1) do
+    while autoJoinEnabled and task.wait(0.1) do
         if player.Team and player.Team.Name == "Visitor" then
             local args = {selectedTeam, selectedRole or "CF"}
             game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
