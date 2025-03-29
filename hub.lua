@@ -65,7 +65,7 @@ local function autoJoinTeam()
             local args = {selectedTeam, selectedRole or "CF"}
             game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
         end
-        task.wait(0.01)
+        task.wait(0.000001)
     end
 end
 
