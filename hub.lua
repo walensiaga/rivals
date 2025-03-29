@@ -58,12 +58,14 @@ local currentTheme = "Dark"
 local roundingEnabled = false
 local smoothDraggingEnabled = true
 
+local autoJoinConnection = nil
 local function autoJoinTeam()
-    while autoJoinEnabled and task.wait(0.0001) do
+    while autoJoinEnabled do
         if player.Team and player.Team.Name == "Visitor" then
             local args = {selectedTeam, selectedRole or "CF"}
             game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
         end
+        task.wait(0.01)
     end
 end
 
@@ -879,7 +881,15 @@ TeamTab:AddToggle("AutoJoin", {
     Callback = function(Value)
         autoJoinEnabled = Value
         if Value then
-            task.spawn(autoJoinTeam) -- Запускаємо перевірку в окремому потоці
+            if autoJoinConnection then
+                autoJoinConnection:Disconnect()
+            end
+            autoJoinConnection = task.spawn(autoJoinTeam)
+        else
+            if autoJoinConnection then
+                autoJoinConnection:Disconnect()
+                autoJoinConnection = nil
+            end
         end
     end
 })
@@ -990,8 +1000,8 @@ StylesTab:AddSection("Style Selection")
 
 StylesTab:AddDropdown("SelectStyle", {
     Title = "Select Style",
-    Values = {"Sae", "NEL Isagi", "Don Lorenzo", "Shidou", "Yukimiya", "Kurona", "Kunigami", "Aiku", "Rin",
-              "Karasu", "Nagi", "Reo", "King", "Hiori", "Otoya", "Bachira", "Gagamaru",
+    Values = {"Sae", "NEL Isagi", "Don Lorenzo", "Shidou", "Yukimiya", "Kunigami", "Aiku", "Rin",
+              "Karasu", "Nagi", "Reo", "King", "Kurona", "Hiori", "Otoya", "Bachira", "Gagamaru",
               "Isagi", "Chigiri"},
     Default = selectedStyle,
     Callback = function(Option)
