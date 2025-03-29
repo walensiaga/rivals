@@ -24,8 +24,7 @@ local autoGoalEnabled = false
 local autoStealEnabled = false
 local autoTPBallEnabled = false
 local autoJoinRandomTeamEnabled = false
-local autoJoinHomeEnabled = false
-local autoJoinAwayEnabled = false
+local autoJoinEnabled
 local autoGoalKeeperEnabled = false
 local autoBringEnabled = false
 local aimlockEnabled = false
@@ -59,17 +58,12 @@ local currentTheme = "Dark"
 local roundingEnabled = false
 local smoothDraggingEnabled = true
 
--- Функція приєднання до обраної команди
-local function joinSelectedTeam()
-    if player.Team and player.Team.Name == "Visitor" then
-        if autoJoinHomeEnabled then
-            selectedTeam = "Home"
-        elseif autoJoinAwayEnabled then
-            selectedTeam = "Away"
+local function autoJoinTeam()
+    while autoJoinEnabled and task.wait(1) do
+        if player.Team and player.Team.Name == "Visitor" then
+            local args = {selectedTeam, selectedRole or "CF"}
+            game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
         end
-        local args = {selectedTeam, selectedRole}
-        game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-        task.wait(1) -- Затримка для приєднання
     end
 end
 
@@ -879,38 +873,13 @@ TeamTab:AddDropdown("SelectRole", {
     end
 })
 
-TeamTab:AddToggle("AutoJoinHome", {
-    Title = "Auto Join Home",
+TeamTab:AddToggle("AutoJoin", {
+    Title = "Auto Join Team",
     Default = false,
     Callback = function(Value)
-        autoJoinHomeEnabled = Value
-        autoJoinAwayEnabled = false -- Вимикаємо протилежну команду
+        autoJoinEnabled = Value
         if Value then
-            while autoJoinHomeEnabled do
-                if player.Team and player.Team.Name == "Visitor" then
-                    local args = {"Home", selectedRole or "CF"}
-                    game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-                end
-                task.wait(20)
-            end
-        end
-    end
-})
-
-TeamTab:AddToggle("AutoJoinAway", {
-    Title = "Auto Join Away",
-    Default = false,
-    Callback = function(Value)
-        autoJoinAwayEnabled = Value
-        autoJoinHomeEnabled = false -- Вимикаємо протилежну команду
-        if Value then
-            while autoJoinAwayEnabled do
-                if player.Team and player.Team.Name == "Visitor" then
-                    local args = {"Away", selectedRole or "CF"}
-                    game:GetService("ReplicatedStorage").Packages.Knit.Services.TeamService.RE.Select:FireServer(unpack(args))
-                end
-                task.wait(20)
-            end
+            task.spawn(autoJoinTeam) -- Запускаємо перевірку в окремому потоці
         end
     end
 })
