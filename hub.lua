@@ -881,15 +881,7 @@ TeamTab:AddToggle("AutoJoin", {
     Callback = function(Value)
         autoJoinEnabled = Value
         if Value then
-            if autoJoinConnection then
-                autoJoinConnection:Disconnect()
-            end
-            autoJoinConnection = task.spawn(autoJoinTeam)
-        else
-            if autoJoinConnection then
-                autoJoinConnection:Disconnect()
-                autoJoinConnection = nil
-            end
+            task.spawn(autoJoinTeam)
         end
     end
 })
