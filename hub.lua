@@ -911,30 +911,96 @@ ModsTab:AddToggle("NoAbilityCooldown", {
     Title = "No Ability Cooldown",
     Default = false,
     Callback = function(Value)
-        local success, C = pcall(function()
-            return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
-        end)
-
-        if not success then
-            warn("AbilityController not found!")
-            return
-        end
-
-        if not C or not C.AbilityCooldown or type(C.AbilityCooldown) ~= "function" then
-            warn("AbilityCooldown is not a valid function!")
-            return
-        end
-
-        if not C.OriginalAbilityCooldown then
-            C.OriginalAbilityCooldown = C.AbilityCooldown
-        end
-
         if Value then
-            C.AbilityCooldown = function(self, abilityName, ...)
-                return C.OriginalAbilityCooldown(self, abilityName, 0, ...)
+            -- Увімкнення No Ability Cooldown
+            local success, AbilityController = pcall(function()
+                return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
+            end)
+
+            if not success or not AbilityController then
+                -- Якщо AbilityController не знайдено, пробуємо інший шлях
+                success, AbilityController = pcall(function()
+                    return require(game:GetService("ReplicatedStorage").Packages.Knit.Controllers.AbilityController)
+                end)
+            end
+
+            if success and AbilityController then
+                -- Зберігаємо оригінальну функцію, якщо ще не зберегли
+                if not AbilityController.__originalCooldownFunction then
+                    AbilityController.__originalCooldownFunction = AbilityController.AbilityCooldown
+                end
+
+                -- Перевизначаємо функцію AbilityCooldown
+                AbilityController.AbilityCooldown = function(self, abilityName, cooldownTime, ...)
+                    -- Ігноруємо час затримки, встановлюємо 0
+                    return AbilityController.__originalCooldownFunction(self, abilityName, 0, ...)
+                end
+                Fluent:Notify({
+                    Title = "No Ability Cooldown",
+                    Content = "No Ability Cooldown enabled!",
+                    Duration = 3
+                })
+            else
+                -- Якщо не вдалося знайти AbilityController, пробуємо інший підхід
+                local success, StaminaService = pcall(function()
+                    return game:GetService("ReplicatedStorage").Packages.Knit.Services.StaminaService.RE
+                end)
+
+                if success and StaminaService then
+                    -- Спробуємо обійти затримку через StaminaService, якщо вона пов'язана
+                    local oldNamecall
+                    oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+                        local method = getnamecallmethod()
+                        if self == StaminaService and method == "FireServer" then
+                            local args = {...}
+                            if args[1] == "DecreaseStamina" then
+                                -- Ігноруємо зменшення стамини, яке може бути пов'язане з затримкою
+                                return
+                            end
+                        end
+                        return oldNamecall(self, ...)
+                    end)
+                    Fluent:Notify({
+                        Title = "No Ability Cooldown",
+                        Content = "No Ability Cooldown enabled via StaminaService!",
+                        Duration = 3
+                    })
+                else
+                    Fluent:Notify({
+                        Title = "Error",
+                        Content = "Could not find AbilityController or StaminaService!",
+                        Duration = 5
+                    })
+                end
             end
         else
-            C.AbilityCooldown = C.OriginalAbilityCooldown
+            -- Вимкнення No Ability Cooldown
+            local success, AbilityController = pcall(function()
+                return require(game:GetService("ReplicatedStorage").Controllers.AbilityController)
+            end)
+
+            if not success or not AbilityController then
+                success, AbilityController = pcall(function()
+                    return require(game:GetService("ReplicatedStorage").Packages.Knit.Controllers.AbilityController)
+                end)
+            end
+
+            if success and AbilityController and AbilityController.__originalCooldownFunction then
+                -- Відновлюємо оригінальну функцію
+                AbilityController.AbilityCooldown = AbilityController.__originalCooldownFunction
+                AbilityController.__originalCooldownFunction = nil
+                Fluent:Notify({
+                    Title = "No Ability Cooldown",
+                    Content = "No Ability Cooldown disabled!",
+                    Duration = 3
+                })
+            else
+                Fluent:Notify({
+                    Title = "No Ability Cooldown",
+                    Content = "No changes to revert, or AbilityController not found.",
+                    Duration = 3
+                })
+            end
         end
     end
 })
